@@ -2,11 +2,13 @@ import { Calendar, Clock, MessageSquare } from "lucide-react";
 
 import { EditReminderButton } from "@/components/reminders/edit-reminder-button";
 import { ReminderStatusToggle } from "@/components/reminders/reminder-status-toggle";
+import { ViewReminderButton } from "@/components/reminders/view-reminder-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { ReminderListItem } from "@/lib/reminders/map-reminder-row";
 import {
   REMINDER_STATUS_LABELS,
+  isReminderReadOnly,
   reminderStatusBadgeClass,
 } from "@/lib/reminders/reminder-status";
 import { DELIVERY_CHANNEL_LABELS } from "@/lib/schedule-types";
@@ -19,8 +21,15 @@ type ReminderCardProps = {
 };
 
 export function ReminderCard({ reminder }: ReminderCardProps) {
+  const readOnly = isReminderReadOnly(reminder.status);
+
   return (
-    <Card className="flex h-full flex-col border-border/80 bg-card/90 shadow-sm transition-shadow hover:shadow-md">
+    <Card
+      className={cn(
+        "flex h-full flex-col border-border/80 bg-card/90 shadow-sm transition-shadow hover:shadow-md",
+        readOnly && "opacity-90",
+      )}
+    >
       <CardHeader className="gap-2 pb-2">
         <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-2 flex-1 text-base font-semibold leading-snug text-foreground">
@@ -77,8 +86,14 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
             })}
           </p>
           <div className="flex shrink-0 items-center gap-1.5">
-            <EditReminderButton reminderId={reminder.id} variant="button" />
-            <ReminderStatusToggle reminder={reminder} variant="button" />
+            {readOnly ? (
+              <ViewReminderButton reminder={reminder} variant="button" />
+            ) : (
+              <>
+                <EditReminderButton reminderId={reminder.id} variant="button" />
+                <ReminderStatusToggle reminder={reminder} variant="button" />
+              </>
+            )}
           </div>
         </div>
       </CardContent>

@@ -2,7 +2,7 @@ import type { ReminderListQuery } from "@/lib/reminders/reminder-list-params";
 
 export type RemindersQueryFilters = Pick<
   ReminderListQuery,
-  "search" | "status" | "dateFrom" | "dateTo"
+  "scope" | "search" | "status" | "dateFrom" | "dateTo"
 >;
 
 import type { QueryClient } from "@tanstack/react-query";

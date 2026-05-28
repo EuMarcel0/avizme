@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 export class GetReminderForEditError extends Error {
   constructor(
     message: string,
-    readonly status: 401 | 404 | 500 = 500,
+    readonly status: 400 | 401 | 404 | 500 = 500,
   ) {
     super(message);
     this.name = "GetReminderForEditError";
@@ -54,6 +54,7 @@ export async function getReminderForEdit(
       id,
       title,
       message,
+      status,
       reminder_schedules (
         schedule_type,
         start_date,
@@ -78,6 +79,13 @@ export async function getReminderForEdit(
 
   if (reminderError || !reminder) {
     throw new GetReminderForEditError("Lembrete não encontrado", 404);
+  }
+
+  if (reminder.status === "completed" || reminder.status === "archived") {
+    throw new GetReminderForEditError(
+      "Este lembrete teve o ciclo finalizado e não pode ser editado.",
+      400,
+    );
   }
 
   const { data: profile } = await supabase

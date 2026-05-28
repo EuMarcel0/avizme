@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 
 type ViewReminderButtonProps = {
   reminder: ReminderListItem;
+  variant?: "button" | "icon";
   className?: string;
 };
 
@@ -83,6 +84,7 @@ function ReminderViewContent({ reminder }: { reminder: ReminderListItem }) {
 
 export function ViewReminderButton({
   reminder,
+  variant = "icon",
   className,
 }: ViewReminderButtonProps) {
   const { openModal } = useModal();
@@ -90,9 +92,28 @@ export function ViewReminderButton({
   function handleOpen() {
     openModal({
       title: "Detalhes do lembrete",
+      description:
+        reminder.status === "completed"
+          ? "Ciclo finalizado — apenas visualização."
+          : undefined,
       className: "w-[min(96vw,32rem)] max-w-[min(96vw,32rem)]",
       content: <ReminderViewContent reminder={reminder} />,
     });
+  }
+
+  if (variant === "button") {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className={cn("h-8 gap-1.5 text-xs", className)}
+        onClick={handleOpen}
+      >
+        <Eye className="size-3.5" />
+        Ver
+      </Button>
+    );
   }
 
   return (

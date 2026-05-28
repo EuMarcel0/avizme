@@ -2,12 +2,15 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { finalizeCompletedReminders } from "@/lib/reminders/finalize-completed-reminders";
 import { mapReminderRow, type ReminderListItem } from "@/lib/reminders/map-reminder-row";
 import {
+  matchesReminderListScope,
   matchesReminderStatusFilter,
   normalizeReminderStatusFilter,
 } from "@/lib/reminders/reminder-status";
 import {
+  normalizeReminderListScope,
   type ReminderListQuery,
   type RemindersListResponse,
   toRpcDateParam,
@@ -115,6 +118,7 @@ async function listRemindersViaRpc(
   client: SupabaseClient,
   query: ReminderListQuery,
 ): Promise<RemindersListResponse | null> {
+  const scope = normalizeReminderListScope(query.scope);
   const { data, error } = await client.rpc("list_reminders_paginated", {
     p_search: query.search,
     p_status_filter: normalizeReminderStatusFilter(query.status),
@@ -122,6 +126,7 @@ async function listRemindersViaRpc(
     p_date_to: toRpcDateParam(query.dateTo),
     p_offset: query.offset,
     p_limit: query.limit,
+    p_scope: scope,
   });
 
   if (error) {
@@ -153,11 +158,18 @@ async function listRemindersViaQuery(
     );
   }
 
+  const scope = normalizeReminderListScope(query.scope);
   const statusFilter = normalizeReminderStatusFilter(query.status);
-  if (statusFilter === "active") {
-    builder = builder.eq("status", "active");
-  } else if (statusFilter === "inactive") {
-    builder = builder.neq("status", "active");
+
+  if (scope === "history") {
+    builder = builder.eq("status", "completed");
+  } else {
+    builder = builder.neq("status", "completed");
+    if (statusFilter === "active") {
+      builder = builder.eq("status", "active");
+    } else if (statusFilter === "inactive") {
+      builder = builder.eq("status", "paused");
+    }
   }
 
   const { data, error } = await builder;
@@ -169,7 +181,12 @@ async function listRemindersViaQuery(
 
   const statusFiltered = data
     .map((row) => mapReminderRow(row as ReminderRowPayload))
-    .filter((item) => matchesReminderStatusFilter(item.status, statusFilter));
+    .filter((item) => matchesReminderListScope(item.status, scope))
+    .filter((item) =>
+      scope === "history"
+        ? true
+        : matchesReminderStatusFilter(item.status, statusFilter),
+    );
 
   const dateFiltered = statusFiltered.filter((item) =>
     matchesDateFilter(item, query.dateFrom, query.dateTo),
@@ -196,13 +213,15 @@ export async function listRemindersPaginated(
     return { items: [], total: 0 };
   }
 
+  await finalizeCompletedReminders(client);
+
   const rpcResult = await listRemindersViaRpc(client, query);
   if (rpcResult !== null) return rpcResult;
 
   return listRemindersViaQuery(client, user.id, query);
 }
 
-export async function userHasAnyReminders(): Promise<boolean> {
+export async function userHasOngoingReminders(): Promise<boolean> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -213,8 +232,32 @@ export async function userHasAnyReminders(): Promise<boolean> {
   const { count, error } = await supabase
     .from("reminders")
     .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .neq("status", "completed");
 
   if (error) return false;
   return (count ?? 0) > 0;
+}
+
+export async function userHasHistoryReminders(): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  const { count, error } = await supabase
+    .from("reminders")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("status", "completed");
+
+  if (error) return false;
+  return (count ?? 0) > 0;
+}
+
+/** @deprecated Use userHasOngoingReminders ou userHasHistoryReminders */
+export async function userHasAnyReminders(): Promise<boolean> {
+  return userHasOngoingReminders();
 }

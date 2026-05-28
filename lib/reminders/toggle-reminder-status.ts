@@ -5,7 +5,7 @@ export function getNextStatusForToggle(
 ): ReminderStatus | null {
   if (current === "active") return "paused";
   if (current === "paused") return "active";
-  if (current === "completed" || current === "archived") return "active";
+  if (current === "completed" || current === "archived") return null;
   return null;
 }
 

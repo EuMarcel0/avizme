@@ -298,7 +298,8 @@ CREATE OR REPLACE FUNCTION public.list_reminders_paginated(
   p_date_from date DEFAULT NULL,
   p_date_to date DEFAULT NULL,
   p_offset integer DEFAULT 0,
-  p_limit integer DEFAULT 12
+  p_limit integer DEFAULT 12,
+  p_scope text DEFAULT 'ongoing'
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -312,6 +313,7 @@ DECLARE
   v_items jsonb;
   v_search text := trim(COALESCE(p_search, ''));
   v_status_filter text;
+  v_scope text;
 BEGIN
   IF v_user_id IS NULL THEN
     RETURN jsonb_build_object('items', '[]'::jsonb, 'total', 0);
@@ -330,6 +332,11 @@ BEGIN
     v_status_filter := 'todos';
   END IF;
 
+  v_scope := lower(trim(COALESCE(p_scope, 'ongoing')));
+  IF v_scope NOT IN ('ongoing', 'history') THEN
+    v_scope := 'ongoing';
+  END IF;
+
   WITH filtered AS (
     SELECT r.id, r.created_at
     FROM public.reminders r
@@ -340,9 +347,16 @@ BEGIN
         OR r.message ILIKE '%' || v_search || '%'
       )
       AND (
-        v_status_filter IN ('todos', 'all')
-        OR (v_status_filter = 'active' AND r.status = 'active')
-        OR (v_status_filter = 'inactive' AND r.status <> 'active')
+        (v_scope = 'history' AND r.status = 'completed')
+        OR (
+          v_scope = 'ongoing'
+          AND r.status <> 'completed'
+          AND (
+            v_status_filter IN ('todos', 'all')
+            OR (v_status_filter = 'active' AND r.status = 'active')
+            OR (v_status_filter = 'inactive' AND r.status = 'paused')
+          )
+        )
       )
       AND (
         (p_date_from IS NULL AND p_date_to IS NULL)
@@ -418,5 +432,5 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.list_reminders_paginated(
-  text, text, date, date, integer, integer
+  text, text, date, date, integer, integer, text
 ) TO authenticated;

@@ -1,5 +1,5 @@
 import { AppHome } from "@/components/app/app-home";
-import { userHasAnyReminders } from "@/lib/reminders/list-reminders";
+import { userHasOngoingReminders } from "@/lib/reminders/list-reminders";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppHomePage() {
@@ -21,7 +21,7 @@ export default async function AppHomePage() {
         .maybeSingle()
     : { data: null };
 
-  const hasReminders = await userHasAnyReminders();
+  const hasReminders = await userHasOngoingReminders();
 
   return (
     <AppHome

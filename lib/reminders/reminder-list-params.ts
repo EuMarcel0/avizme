@@ -7,7 +7,11 @@ export const REMINDERS_PAGE_SIZE_GRID = 12;
 export const REMINDERS_PAGE_SIZE_LIST = 20;
 export const REMINDERS_PAGE_SIZE_MAX = 50;
 
+/** `ongoing` = /app (sem ciclo finalizado); `history` = /app/historico. */
+export type ReminderListScope = "ongoing" | "history";
+
 export type ReminderListQuery = {
+  scope: ReminderListScope;
   search: string;
   status: ReminderStatusFilter;
   dateFrom: string;
@@ -15,6 +19,12 @@ export type ReminderListQuery = {
   offset: number;
   limit: number;
 };
+
+export function normalizeReminderListScope(
+  value: string | null | undefined,
+): ReminderListScope {
+  return value === "history" ? "history" : "ongoing";
+}
 
 export type RemindersListResponse = {
   items: import("@/lib/reminders/map-reminder-row").ReminderListItem[];
@@ -46,6 +56,7 @@ export function parseReminderListSearchParams(
   );
 
   return {
+    scope: normalizeReminderListScope(searchParams.get("scope")),
     search: (searchParams.get("search") ?? "").trim(),
     status: parseStatusFilter(searchParams.get("status")),
     dateFrom: searchParams.get("dateFrom") ?? "",

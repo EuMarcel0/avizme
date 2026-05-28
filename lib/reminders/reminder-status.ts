@@ -1,14 +1,20 @@
+import type { ReminderListScope } from "@/lib/reminders/reminder-list-params";
+
 export type ReminderStatus = "active" | "paused" | "completed" | "archived";
 
 export const REMINDER_STATUS_LABELS: Record<ReminderStatus, string> = {
   active: "Ativo",
   paused: "Pausado",
-  completed: "Concluído",
+  completed: "Ciclo finalizado",
   archived: "Arquivado",
 };
 
-/** Filtro da listagem: todos, ativo ou inativo (não ativo). */
-export type ReminderStatusFilter = "todos" | "active" | "inactive";
+/** Filtro da listagem. */
+export type ReminderStatusFilter =
+  | "todos"
+  | "active"
+  | "inactive"
+  | "completed";
 
 export const REMINDER_STATUS_FILTER_OPTIONS: Array<{
   value: ReminderStatusFilter;
@@ -17,7 +23,12 @@ export const REMINDER_STATUS_FILTER_OPTIONS: Array<{
   { value: "todos", label: "Todos" },
   { value: "active", label: "Ativo" },
   { value: "inactive", label: "Inativo" },
+  { value: "completed", label: "Ciclo finalizado" },
 ];
+
+/** Filtros de status em /app (sem ciclo finalizado — ver Histórico). */
+export const REMINDER_STATUS_FILTER_OPTIONS_ONGOING =
+  REMINDER_STATUS_FILTER_OPTIONS.filter((opt) => opt.value !== "completed");
 
 export const REMINDER_STATUS_FILTER_LABELS: Record<
   ReminderStatusFilter,
@@ -26,6 +37,7 @@ export const REMINDER_STATUS_FILTER_LABELS: Record<
   todos: "Todos",
   active: "Ativo",
   inactive: "Inativo",
+  completed: "Ciclo finalizado",
 };
 
 export function getReminderStatusFilterLabel(
@@ -37,7 +49,13 @@ export function getReminderStatusFilterLabel(
 export function normalizeReminderStatusFilter(
   value: string | null | undefined,
 ): ReminderStatusFilter {
-  if (value === "active" || value === "inactive") return value;
+  if (
+    value === "active" ||
+    value === "inactive" ||
+    value === "completed"
+  ) {
+    return value;
+  }
   return "todos";
 }
 
@@ -47,7 +65,22 @@ export function matchesReminderStatusFilter(
 ): boolean {
   if (filter === "todos") return true;
   if (filter === "active") return status === "active";
-  return status !== "active";
+  if (filter === "inactive") return status === "paused";
+  if (filter === "completed") return status === "completed";
+  return true;
+}
+
+export function matchesReminderListScope(
+  status: ReminderStatus,
+  scope: ReminderListScope,
+): boolean {
+  if (scope === "history") return status === "completed";
+  return status !== "completed";
+}
+
+/** Lembrete só leitura após o ciclo terminar (ou arquivado). */
+export function isReminderReadOnly(status: ReminderStatus): boolean {
+  return status === "completed" || status === "archived";
 }
 
 export function reminderStatusBadgeClass(status: ReminderStatus): string {
@@ -57,7 +90,7 @@ export function reminderStatusBadgeClass(status: ReminderStatus): string {
     case "paused":
       return "bg-aviz-sand/50 text-foreground border-border/80";
     case "completed":
-      return "bg-aviz-mint/25 text-foreground border-aviz-mint/40";
+      return "bg-muted/80 text-muted-foreground border-border/70";
     case "archived":
       return "bg-muted text-muted-foreground border-border/60";
     default:

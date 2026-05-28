@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import {
   getReminderStatusFilterLabel,
-  REMINDER_STATUS_FILTER_OPTIONS,
+  REMINDER_STATUS_FILTER_OPTIONS_ONGOING,
   type ReminderStatusFilter,
 } from "@/lib/reminders/reminder-status";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ type RemindersFiltersProps = {
   dateTo: string;
   onDateToChange: (value: string) => void;
   layout?: "inline" | "stacked";
+  showStatusFilter?: boolean;
   className?: string;
 };
 
@@ -44,10 +45,10 @@ export function RemindersFilters({
   dateTo,
   onDateToChange,
   layout = "inline",
+  showStatusFilter = true,
   className,
 }: RemindersFiltersProps) {
   const isStacked = layout === "stacked";
-
   return (
     <div
       className={cn(
@@ -78,36 +79,38 @@ export function RemindersFilters({
         </div>
       </div>
 
-      <div className={cn(fieldClass, isStacked ? "w-full" : "w-[11.5rem]")}>
-        <Label htmlFor="reminder-status" className="text-xs">
-          Status
-        </Label>
-        <Select
-          value={status}
-          onValueChange={(value) => {
-            if (
-              value === "todos" ||
-              value === "active" ||
-              value === "inactive"
-            ) {
-              onStatusChange(value);
-            }
-          }}
-        >
-          <SelectTrigger id="reminder-status" className="w-full">
-            <SelectValue placeholder="Selecione o status">
-              {getReminderStatusFilterLabel(status)}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {REMINDER_STATUS_FILTER_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {showStatusFilter ? (
+        <div className={cn(fieldClass, isStacked ? "w-full" : "w-[11.5rem]")}>
+          <Label htmlFor="reminder-status" className="text-xs">
+            Status
+          </Label>
+          <Select
+            value={status}
+            onValueChange={(value) => {
+              if (
+                value === "todos" ||
+                value === "active" ||
+                value === "inactive"
+              ) {
+                onStatusChange(value);
+              }
+            }}
+          >
+            <SelectTrigger id="reminder-status" className="w-full">
+              <SelectValue placeholder="Selecione o status">
+                {getReminderStatusFilterLabel(status)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {REMINDER_STATUS_FILTER_OPTIONS_ONGOING.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
 
       <div className={cn(fieldClass, isStacked ? "w-full" : "w-[10.5rem]")}>
         <Label htmlFor="date-from" className="text-xs">

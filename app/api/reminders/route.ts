@@ -5,41 +5,8 @@ import {
   CreateReminderError,
   type CreateReminderInput,
 } from "@/lib/reminders/create-reminder";
-import { listRemindersPaginated } from "@/lib/reminders/list-reminders-paginated";
-import {
-  parseReminderListSearchParams,
-  REMINDERS_PAGE_SIZE_GRID,
-} from "@/lib/reminders/reminder-list-params";
 import { ReminderAuthError, requireAuthenticatedUser } from "@/lib/reminders/require-auth";
 import { createClient } from "@/lib/supabase/server";
-
-export async function GET(request: Request) {
-  const supabase = await createClient();
-  try {
-    await requireAuthenticatedUser(supabase);
-  } catch (error) {
-    if (error instanceof ReminderAuthError) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
-    throw error;
-  }
-
-  const { searchParams } = new URL(request.url);
-  const query = parseReminderListSearchParams(
-    searchParams,
-    REMINDERS_PAGE_SIZE_GRID,
-  );
-
-  try {
-    const result = await listRemindersPaginated(query, supabase);
-    return NextResponse.json(result);
-  } catch {
-    return NextResponse.json(
-      { error: "Não foi possível listar os lembretes." },
-      { status: 500 },
-    );
-  }
-}
 
 export async function POST(request: Request) {
   const supabase = await createClient();

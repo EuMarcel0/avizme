@@ -58,6 +58,24 @@ export async function updateReminder(
     throw error;
   }
 
+  const { data: existing, error: existingError } = await supabase
+    .from("reminders")
+    .select("status")
+    .eq("id", reminderId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (existingError || !existing) {
+    throw new UpdateReminderError("Lembrete não encontrado", 404);
+  }
+
+  if (existing.status === "completed" || existing.status === "archived") {
+    throw new UpdateReminderError(
+      "Este lembrete teve o ciclo finalizado e não pode ser alterado.",
+      400,
+    );
+  }
+
   const {
     title,
     message,

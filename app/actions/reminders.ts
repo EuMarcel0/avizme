@@ -7,6 +7,11 @@ import {
   CreateReminderError,
   type CreateReminderInput,
 } from "@/lib/reminders/create-reminder";
+import { listRemindersPaginated } from "@/lib/reminders/list-reminders-paginated";
+import type {
+  ReminderListQuery,
+  RemindersListResponse,
+} from "@/lib/reminders/reminder-list-params";
 import { getNextStatusForToggle } from "@/lib/reminders/toggle-reminder-status";
 import {
   getReminderForEdit,
@@ -25,6 +30,16 @@ import {
 import type { ReminderStatus } from "@/lib/reminders/reminder-status";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
+
+export async function getRemindersPageAction(
+  query: ReminderListQuery,
+): Promise<RemindersListResponse> {
+  try {
+    return await listRemindersPaginated(query);
+  } catch {
+    throw new Error("Não foi possível carregar os lembretes.");
+  }
+}
 
 export type CreateReminderActionResult =
   | { ok: true; id: string }

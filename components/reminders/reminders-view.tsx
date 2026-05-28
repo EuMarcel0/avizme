@@ -23,7 +23,8 @@ import {
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePersistedState } from "@/hooks/use-persisted-state";
-import { fetchRemindersPage } from "@/lib/reminders/fetch-reminders-page";
+import { getRemindersPageAction } from "@/app/actions/reminders";
+import type { ReminderListScope } from "@/lib/reminders/reminder-list-params";
 import {
   getReminderListSearchTerm,
   REMINDERS_PAGE_SIZE_GRID,
@@ -35,13 +36,19 @@ import {
   type RemindersQueryFilters,
 } from "@/lib/reminders/reminders-query-keys";
 import {
+  DEFAULT_HISTORY_FILTERS,
   DEFAULT_REMINDERS_FILTERS,
+  hasActiveHistoryFilters,
   hasActiveRemindersFilters,
+  parseHistoryFilters,
   parseRemindersFilters,
   parseRemindersViewMode,
+  HISTORY_FILTERS_STORAGE_KEY,
+  HISTORY_VIEW_STORAGE_KEY,
   REMINDERS_FILTERS_STORAGE_KEY,
   REMINDERS_VIEW_STORAGE_KEY,
   serializeRemindersViewMode,
+  type HistoryFiltersState,
   type RemindersFiltersState,
   type RemindersViewMode,
 } from "@/lib/storage/reminders-preferences";
@@ -89,12 +96,23 @@ function RemindersViewToggle({
   );
 }
 
-export function RemindersView() {
+type RemindersViewProps = {
+  scope: ReminderListScope;
+  emptyTitle?: string;
+  emptyDescription?: string;
+};
+
+export function RemindersView({
+  scope,
+  emptyTitle = "Nenhum lembrete encontrado",
+  emptyDescription = "Ajuste os filtros ou crie um novo lembrete.",
+}: RemindersViewProps) {
   const queryClient = useQueryClient();
   const isMdUp = useMediaQuery("(min-width: 768px)");
+  const isHistory = scope === "history";
 
   const [view, setView] = usePersistedState<RemindersViewMode>(
-    REMINDERS_VIEW_STORAGE_KEY,
+    isHistory ? HISTORY_VIEW_STORAGE_KEY : REMINDERS_VIEW_STORAGE_KEY,
     "grid",
     {
       serialize: serializeRemindersViewMode,
@@ -102,27 +120,42 @@ export function RemindersView() {
     },
   );
 
-  const [filters, setFilters] = usePersistedState<RemindersFiltersState>(
-    REMINDERS_FILTERS_STORAGE_KEY,
-    DEFAULT_REMINDERS_FILTERS,
-    { deserialize: parseRemindersFilters },
-  );
+  const [ongoingFilters, setOngoingFilters] =
+    usePersistedState<RemindersFiltersState>(
+      REMINDERS_FILTERS_STORAGE_KEY,
+      DEFAULT_REMINDERS_FILTERS,
+      { deserialize: parseRemindersFilters },
+    );
+
+  const [historyFilters, setHistoryFilters] =
+    usePersistedState<HistoryFiltersState>(
+      HISTORY_FILTERS_STORAGE_KEY,
+      DEFAULT_HISTORY_FILTERS,
+      { deserialize: parseHistoryFilters },
+    );
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [listPage, setListPage] = useState(1);
 
-  const { search, status, dateFrom, dateTo } = filters;
+  const search = isHistory ? historyFilters.search : ongoingFilters.search;
+  const status = isHistory ? "todos" : ongoingFilters.status;
+  const dateFrom = isHistory ? historyFilters.dateFrom : ongoingFilters.dateFrom;
+  const dateTo = isHistory ? historyFilters.dateTo : ongoingFilters.dateTo;
+
   const debouncedSearch = useDebouncedValue(search, 500);
-  const filtersActive = hasActiveRemindersFilters(filters);
+  const filtersActive = isHistory
+    ? hasActiveHistoryFilters(historyFilters)
+    : hasActiveRemindersFilters(ongoingFilters);
 
   const queryFilters: RemindersQueryFilters = useMemo(
     () => ({
+      scope,
       search: getReminderListSearchTerm(search, debouncedSearch),
       status,
       dateFrom,
       dateTo,
     }),
-    [search, debouncedSearch, status, dateFrom, dateTo],
+    [scope, search, debouncedSearch, status, dateFrom, dateTo],
   );
 
   const showGrid = !isMdUp || view === "grid";
@@ -135,7 +168,7 @@ export function RemindersView() {
   const infiniteQuery = useInfiniteQuery({
     queryKey: remindersQueryKeys.infinite(queryFilters),
     queryFn: ({ pageParam }) =>
-      fetchRemindersPage({
+      getRemindersPageAction({
         ...queryFilters,
         offset: pageParam,
         limit: REMINDERS_PAGE_SIZE_GRID,
@@ -151,7 +184,7 @@ export function RemindersView() {
   const listQuery = useQuery({
     queryKey: remindersQueryKeys.listPage(queryFilters, listPage),
     queryFn: () =>
-      fetchRemindersPage({
+      getRemindersPageAction({
         ...queryFilters,
         offset: (listPage - 1) * REMINDERS_PAGE_SIZE_LIST,
         limit: REMINDERS_PAGE_SIZE_LIST,
@@ -201,12 +234,40 @@ export function RemindersView() {
     </>
   );
 
-  function updateFilters(patch: Partial<RemindersFiltersState>) {
-    setFilters((prev) => ({ ...prev, ...patch }));
+  function updateSearch(value: string) {
+    if (isHistory) {
+      setHistoryFilters((prev) => ({ ...prev, search: value }));
+    } else {
+      setOngoingFilters((prev) => ({ ...prev, search: value }));
+    }
+  }
+
+  function updateStatus(value: RemindersFiltersState["status"]) {
+    setOngoingFilters((prev) => ({ ...prev, status: value }));
+  }
+
+  function updateDateFrom(value: string) {
+    if (isHistory) {
+      setHistoryFilters((prev) => ({ ...prev, dateFrom: value }));
+    } else {
+      setOngoingFilters((prev) => ({ ...prev, dateFrom: value }));
+    }
+  }
+
+  function updateDateTo(value: string) {
+    if (isHistory) {
+      setHistoryFilters((prev) => ({ ...prev, dateTo: value }));
+    } else {
+      setOngoingFilters((prev) => ({ ...prev, dateTo: value }));
+    }
   }
 
   async function clearFilters() {
-    setFilters(DEFAULT_REMINDERS_FILTERS);
+    if (isHistory) {
+      setHistoryFilters(DEFAULT_HISTORY_FILTERS);
+    } else {
+      setOngoingFilters(DEFAULT_REMINDERS_FILTERS);
+    }
     setListPage(1);
     setFiltersOpen(false);
     await invalidateRemindersQueries(queryClient);
@@ -215,13 +276,14 @@ export function RemindersView() {
   const filterFields = (
     <RemindersFilters
       search={search}
-      onSearchChange={(value) => updateFilters({ search: value })}
+      onSearchChange={updateSearch}
       status={status}
-      onStatusChange={(value) => updateFilters({ status: value })}
+      onStatusChange={updateStatus}
       dateFrom={dateFrom}
-      onDateFromChange={(value) => updateFilters({ dateFrom: value })}
+      onDateFromChange={updateDateFrom}
       dateTo={dateTo}
-      onDateToChange={(value) => updateFilters({ dateTo: value })}
+      onDateToChange={updateDateTo}
+      showStatusFilter={!isHistory}
     />
   );
 
@@ -270,15 +332,14 @@ export function RemindersView() {
                 <RemindersFilters
                   layout="stacked"
                   search={search}
-                  onSearchChange={(value) => updateFilters({ search: value })}
+                  onSearchChange={updateSearch}
                   status={status}
-                  onStatusChange={(value) => updateFilters({ status: value })}
+                  onStatusChange={updateStatus}
                   dateFrom={dateFrom}
-                  onDateFromChange={(value) =>
-                    updateFilters({ dateFrom: value })
-                  }
+                  onDateFromChange={updateDateFrom}
                   dateTo={dateTo}
-                  onDateToChange={(value) => updateFilters({ dateTo: value })}
+                  onDateToChange={updateDateTo}
+                  showStatusFilter={!isHistory}
                 />
                 {filtersActive ? (
                   <Button
@@ -322,11 +383,9 @@ export function RemindersView() {
         <RemindersGridSkeleton />
       ) : isEmpty ? (
         <div className="rounded-lg border border-dashed border-border/80 bg-muted/10 px-6 py-12 text-center">
-          <p className="text-sm font-medium text-foreground">
-            Nenhum lembrete encontrado
-          </p>
+          <p className="text-sm font-medium text-foreground">{emptyTitle}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Ajuste os filtros ou crie um novo lembrete.
+            {emptyDescription}
           </p>
         </div>
       ) : (

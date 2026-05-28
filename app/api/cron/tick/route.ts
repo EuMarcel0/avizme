@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { verifyCronRequest } from "@/lib/cron/verify-cron-request";
 import { dispatchDueReminders } from "@/lib/dispatch/dispatch-batch";
+import { finalizeCompletedReminders } from "@/lib/reminders/finalize-completed-reminders";
 import { generateOccurrencesBatch } from "@/lib/scheduling/generate-occurrences";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -22,11 +23,13 @@ export async function GET(request: Request) {
     const supabase = createServiceClient();
     const generate = await generateOccurrencesBatch(supabase);
     const dispatch = await dispatchDueReminders();
+    const finalize = await finalizeCompletedReminders(supabase);
 
     return NextResponse.json({
       ok: true,
       generate,
       dispatch,
+      finalize,
     });
   } catch (error) {
     const message =

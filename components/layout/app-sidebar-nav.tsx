@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, History } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +11,13 @@ const navItems = [
     href: "/app",
     label: "Lembretes",
     icon: Bell,
+    exact: true,
+  },
+  {
+    href: "/app/historico",
+    label: "Histórico",
+    icon: History,
+    exact: false,
   },
 ] as const;
 
@@ -36,9 +43,10 @@ export function AppSidebarNav({
         className,
       )}
     >
-      {navItems.map(({ href, label, icon: Icon }) => {
-        const isActive =
-          pathname === href || pathname.startsWith(`${href}/`);
+      {navItems.map(({ href, label, icon: Icon, exact }) => {
+        const isActive = exact
+          ? pathname === href
+          : pathname === href || pathname.startsWith(`${href}/`);
 
         return (
           <Link

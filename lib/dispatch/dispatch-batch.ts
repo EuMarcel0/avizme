@@ -7,6 +7,7 @@ import type {
   DispatchChannelResult,
   DispatchPayload,
 } from "@/lib/dispatch/types";
+import { finalizeCompletedReminders } from "@/lib/reminders/finalize-completed-reminders";
 import type { DeliveryChannel } from "@/lib/scheduling/types";
 import { createServiceClient } from "@/lib/supabase/service";
 
@@ -74,7 +75,10 @@ export async function dispatchDueReminders(): Promise<DispatchBatchResult> {
     return result;
   }
 
-  if (!due?.length) return result;
+  if (!due?.length) {
+    await finalizeCompletedReminders(supabase);
+    return result;
+  }
 
   const reminderIds = [...new Set(due.map((row) => row.reminder_id as string))];
 
@@ -179,5 +183,6 @@ export async function dispatchDueReminders(): Promise<DispatchBatchResult> {
     }
   }
 
+  await finalizeCompletedReminders(supabase);
   return result;
 }
