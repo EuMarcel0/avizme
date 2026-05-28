@@ -6,6 +6,9 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
+/** Coluna fixa do ícone (alinhada com o rail + px-2 do nav). */
+const SIDEBAR_ICON_COLUMN_CLASS = "w-10";
+
 const navItems = [
   {
     href: "/app",
@@ -21,9 +24,6 @@ const navItems = [
   },
 ] as const;
 
-const labelTransition =
-  "transition-[max-width,opacity,margin-left] duration-300 ease-in-out";
-
 export function AppSidebarNav({
   onNavigate,
   className,
@@ -38,8 +38,9 @@ export function AppSidebarNav({
   return (
     <nav
       className={cn(
-        "flex flex-col gap-1 py-3",
-        collapsible ? "px-1.5 group-hover/sidebar:px-3" : "px-3",
+        "flex flex-col gap-0.5",
+        "px-2",
+        !collapsible && "py-1",
         className,
       )}
     >
@@ -55,31 +56,40 @@ export function AppSidebarNav({
             onClick={onNavigate}
             title={collapsible ? label : undefined}
             className={cn(
-              "flex h-10 w-full items-center rounded-lg text-sm font-medium",
-              "transition-colors duration-300",
-              collapsible
-                ? "justify-center group-hover/sidebar:justify-start group-hover/sidebar:px-3"
-                : "px-3",
+              "relative flex w-full items-center rounded-md text-xs font-medium",
+              collapsible ? "h-8" : "h-9 gap-2.5 px-3",
+              "transition-colors duration-200",
               isActive
                 ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
                 : "text-muted-foreground hover:bg-muted/60 hover:text-foreground dark:hover:bg-muted/40",
             )}
           >
-            <Icon className="size-5 shrink-0" aria-hidden />
-            <span
-              className={cn(
-                "overflow-hidden whitespace-nowrap",
-                collapsible
-                  ? cn(
-                      labelTransition,
-                      "ml-0 max-w-0 opacity-0",
-                      "group-hover/sidebar:ml-3 group-hover/sidebar:max-w-[9.5rem] group-hover/sidebar:opacity-100",
-                    )
-                  : "ml-3",
-              )}
-            >
-              {label}
-            </span>
+            {collapsible ? (
+              <>
+                <span
+                  className={cn(
+                    "flex shrink-0 items-center justify-center",
+                    SIDEBAR_ICON_COLUMN_CLASS,
+                  )}
+                >
+                  <Icon className="size-4 shrink-0" aria-hidden />
+                </span>
+                <span
+                  className={cn(
+                    "pointer-events-none absolute top-1/2 left-10 -translate-y-1/2 truncate pr-2",
+                    "max-w-[calc(11rem-2.5rem-1rem)] opacity-0 transition-opacity duration-300",
+                    "group-hover/sidebar:opacity-100",
+                  )}
+                >
+                  {label}
+                </span>
+              </>
+            ) : (
+              <>
+                <Icon className="size-4 shrink-0" aria-hidden />
+                <span>{label}</span>
+              </>
+            )}
           </Link>
         );
       })}

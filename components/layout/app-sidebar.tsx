@@ -8,13 +8,20 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        "group/sidebar hidden w-20 shrink-0 flex-col overflow-hidden",
-        "border-r border-border/80 bg-white dark:border-border dark:bg-zinc-950",
-        "transition-[width] duration-300 ease-in-out hover:w-60",
-        "md:flex",
+        "relative hidden shrink-0 md:block",
+        "w-14",
       )}
     >
-      <AppSidebarNav className="flex-1 py-3" collapsible />
+      <div
+        className={cn(
+          "group/sidebar absolute inset-y-0 left-0 z-50 flex min-h-dvh flex-col overflow-hidden",
+          "border-r border-border/80 bg-white dark:border-border dark:bg-zinc-950",
+          "w-14 shadow-none transition-[width,box-shadow] duration-300 ease-in-out",
+          "hover:w-44 hover:shadow-lg",
+        )}
+      >
+        <AppSidebarNav className="flex-1 py-2" collapsible />
+      </div>
     </aside>
   );
 }
