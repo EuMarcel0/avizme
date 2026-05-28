@@ -1,12 +1,10 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import { NewReminderForm } from "@/components/reminders/new-reminder-form";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal";
-import { createClient } from "@/lib/supabase/client";
 
 type NewReminderButtonProps = {
   className?: string;
@@ -16,29 +14,10 @@ type NewReminderButtonProps = {
 
 export function NewReminderButton({
   className,
-  userEmail: initialEmail,
-  userPhone: initialPhone,
+  userEmail,
+  userPhone,
 }: NewReminderButtonProps) {
   const { openModal } = useModal();
-  const [email, setEmail] = useState(initialEmail ?? null);
-  const [phone, setPhone] = useState(initialPhone ?? null);
-
-  useEffect(() => {
-    if (initialEmail && initialPhone) return;
-
-    const supabase = createClient();
-    void supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase
-        .from("users")
-        .select("email, phone")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (data?.email) setEmail(data.email);
-      if (data?.phone) setPhone(data.phone);
-      if (!data?.email && user.email) setEmail(user.email);
-    });
-  }, [initialEmail, initialPhone]);
 
   function handleOpen() {
     openModal({
@@ -46,7 +25,9 @@ export function NewReminderButton({
       description:
         "Escolha no calendário, defina horários e como o aviso será repetido.",
       className: "w-[min(96vw,56rem)] max-w-[min(96vw,56rem)]",
-      content: <NewReminderForm userEmail={email} userPhone={phone} />,
+      content: (
+        <NewReminderForm userEmail={userEmail} userPhone={userPhone} />
+      ),
     });
   }
 

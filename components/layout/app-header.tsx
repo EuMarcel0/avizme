@@ -2,7 +2,6 @@
 
 import { Menu } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -65,17 +64,6 @@ export function AppHeader({
             />
           </SheetContent>
         </Sheet>
-
-        <Link href="/app" className="shrink-0">
-          <Image
-            src="/images/LOGO.png"
-            alt="Avizme"
-            width={44}
-            height={44}
-            priority
-            className="size-11 object-contain"
-          />
-        </Link>
       </div>
 
       <div className="flex items-center gap-1">

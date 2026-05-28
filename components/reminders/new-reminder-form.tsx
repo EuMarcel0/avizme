@@ -2,6 +2,7 @@
 
 import { Form, Formik } from "formik";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -15,7 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { createReminderAction } from "@/app/actions/reminders";
 import { useModal } from "@/hooks/use-modal";
+import { invalidateRemindersQueries } from "@/lib/reminders/reminders-query-keys";
 import {
   buildSchedulesFromForm,
   describeScheduleSummary,
@@ -57,6 +60,7 @@ type NewReminderFormProps = {
 
 export function NewReminderForm({ userEmail, userPhone }: NewReminderFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { closeModal } = useModal();
 
   return (
@@ -79,39 +83,29 @@ export function NewReminderForm({ userEmail, userPhone }: NewReminderFormProps) 
           return;
         }
 
-        try {
-          const res = await fetch("/api/reminders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              title: values.title,
-              message: values.message,
-              mode: values.mode,
-              selectedDates: values.selectedDates.map(toDateString),
-              times: values.times,
-              intervalDays: values.intervalDays,
-              weekdays: values.weekdays,
-              dayOfMonth: values.dayOfMonth,
-              channels: values.channels,
-            }),
-          });
+        const result = await createReminderAction({
+          title: values.title,
+          message: values.message,
+          mode: values.mode,
+          selectedDates: values.selectedDates.map(toDateString),
+          times: values.times.filter((t): t is string => Boolean(t)),
+          intervalDays: values.intervalDays ?? undefined,
+          weekdays: values.weekdays?.filter((d): d is number => d !== undefined),
+          dayOfMonth: values.dayOfMonth ?? undefined,
+          channels: values.channels,
+        });
 
-          const data = (await res.json()) as { error?: string; id?: string };
+        setSubmitting(false);
 
-          if (!res.ok) {
-            toast.error(data.error ?? "Não foi possível salvar o lembrete.");
-            setSubmitting(false);
-            return;
-          }
-
-          toast.success("Lembrete criado com sucesso!");
-          closeModal();
-          router.refresh();
-        } catch {
-          toast.error("Erro de conexão. Tente novamente.");
-        } finally {
-          setSubmitting(false);
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
         }
+
+        toast.success("Lembrete criado com sucesso!");
+        closeModal();
+        await invalidateRemindersQueries(queryClient);
+        router.refresh();
       }}
     >
       {({
