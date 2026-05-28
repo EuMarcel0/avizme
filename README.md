@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Avizme
 
-## Getting Started
+App mobile-first de lembretes enviados por **SMS**, **WhatsApp** e **e-mail**, com agendamento flexível (dia/hora, intervalos, múltiplos horários no mesmo dia, etc.).
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Server Components)
+- **Supabase** (Auth + Postgres)
+- **Drizzle ORM** (migrations)
+- **shadcn/ui** + **Tailwind CSS v4**
+- **Formik** + **Yup**
+- **TanStack Query**
+- **Lodash**
+
+## Começar
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variáveis de ambiente
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copie `.env.example` para `.env` e preencha (o projeto já aceita `SUPABASE_API_URL`, `SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_DB_DIRECT_CONNECTION_STRING`).
 
-## Learn More
+## Sync do usuário (`/api/users/sync`)
 
-To learn more about Next.js, take a look at the following resources:
+O cadastro/login sincroniza o perfil na tabela `users` pela **API do Supabase** (não exige conexão Postgres direta no runtime). As migrations Drizzle usam `SUPABASE_DB_DIRECT_CONNECTION_STRING` apenas no CLI (`pnpm db:migrate`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Se aparecer `relation "public.users" does not exist`, as tabelas ainda não foram criadas. No Supabase: **SQL Editor** → abra o arquivo `db/supabase-setup.sql` do projeto → cole e execute **o script inteiro** (não só a policy de INSERT).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Banco de dados (migrations)
 
-## Deploy on Vercel
+```bash
+# Gerar migration a partir do schema
+pnpm db:generate
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Aplicar migrations no Supabase
+pnpm db:migrate
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Alternativa rápida (dev)
+pnpm db:push
+```
+
+Se a senha do Postgres tiver `@`, codifique na connection string (`@` → `%40`). Ex.: `1590S1ilva@@` → `1590S1ilva%40%40`.
+
+### Tabelas
+
+| Tabela | Descrição |
+|--------|-----------|
+| `users` | Dados do usuário (vinculado a `auth.users`; criado no cadastro via trigger + sync API) |
+| `reminders` | Lembretes |
+| `reminder_schedules` | Regras de agendamento flexíveis |
+| `reminder_delivery_channels` | Canais (sms / whatsapp / email) |
+| `reminder_occurrences` | Instâncias agendadas para envio |
+
+## Auth
+
+- `/login` — e-mail/senha + Google OAuth
+- `/cadastro` — cadastro básico
+- `/app` — área autenticada
+
+No Supabase Dashboard, habilite o provedor **Google** em Authentication → Providers e configure a URL de redirect: `http://localhost:3000/auth/callback`.
+
+## Paleta de cores
+
+`#f7f0ba` · `#e0dba4` · `#a9cba6` · `#7ebea3` · `#53a08e` (definidas em `app/globals.css`).

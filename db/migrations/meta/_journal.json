@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1779927832271,
+      "tag": "0000_remarkable_grey_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779927900000,
+      "tag": "0001_auth_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779928000000,
+      "tag": "0002_rename_profiles_to_users",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779928100000,
+      "tag": "0003_users_insert_policy",
+      "breakpoints": true
+    }
+  ]
+}
