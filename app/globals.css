@@ -78,7 +78,7 @@
   --accent-foreground: #163830;
   --destructive: oklch(0.577 0.245 27.325);
   --border: color-mix(in srgb, var(--aviz-teal) 18%, var(--aviz-sand));
-  --input: color-mix(in srgb, var(--aviz-sand) 70%, white);
+  --input: color-mix(in srgb, var(--aviz-teal) 8%, #eef1f0);
   --ring: var(--aviz-teal);
   --chart-1: var(--aviz-teal);
   --chart-2: var(--aviz-mint);

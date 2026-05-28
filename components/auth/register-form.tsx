@@ -42,7 +42,7 @@ export function RegisterForm() {
   }
 
   return (
-    <Card className='border-border/80 shadow-sm'>
+    <Card className="border-border/80 bg-white shadow-sm dark:border-border dark:bg-card">
       <CardHeader>
         <CardTitle>Criar conta</CardTitle>
         <CardDescription>Cadastro rápido para começar a agendar lembretes.</CardDescription>
@@ -203,14 +203,14 @@ export function RegisterForm() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full gap-2"
+                className="w-full gap-2 border-border/80 bg-white hover:bg-zinc-50 dark:bg-background dark:hover:bg-muted"
                 onClick={handleGoogle}
               >
                 <FcGoogle className="size-5 shrink-0" aria-hidden />
                 Continuar com Google
               </Button>
             </CardContent>
-            <CardFooter className='mt-8 justify-center border-t border-border/60 py-5 text-sm text-muted-foreground'>
+            <CardFooter className='mt-8 justify-center border-t border-border/60 bg-white py-5 text-sm text-muted-foreground dark:bg-muted/50'>
               Já tem conta?{" "}
               <Link href='/login' className='ml-1 font-medium text-primary underline-offset-4 hover:underline'>
                 Entrar

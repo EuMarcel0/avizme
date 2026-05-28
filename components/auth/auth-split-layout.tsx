@@ -14,10 +14,10 @@ export function AuthSplitLayout({
   imageAlt = "Avizme",
 }: AuthSplitLayoutProps) {
   return (
-    <div className="flex min-h-dvh flex-col bg-white dark:bg-zinc-950 lg:flex-row lg:bg-zinc-950">
+    <div className="flex min-h-dvh flex-col bg-white dark:bg-zinc-950 lg:flex-row">
       <div
         className={cn(
-          "hidden items-center justify-center px-5 py-8 lg:flex",
+          "hidden items-center justify-center bg-white px-5 py-8 dark:bg-zinc-950 lg:flex",
           "lg:min-h-dvh lg:w-1/2 lg:px-10 lg:py-10",
         )}
       >

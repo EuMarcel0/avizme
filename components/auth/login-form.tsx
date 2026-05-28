@@ -118,21 +118,21 @@ export function LoginForm() {
               </Button>
               <div className='relative'>
                 <Separator />
-                <span className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground'>
+                <span className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-muted-foreground dark:bg-card'>
                   ou
                 </span>
               </div>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full gap-2"
+                className="w-full gap-2 border-border/80 bg-white hover:bg-zinc-50 dark:bg-background dark:hover:bg-muted"
                 onClick={handleGoogle}
               >
                 <FcGoogle className="size-5 shrink-0" aria-hidden />
                 Continuar com Google
               </Button>
             </CardContent>
-            <CardFooter className='mt-8 justify-center border-t border-border/60 py-5 text-sm text-muted-foreground'>
+            <CardFooter className='mt-8 justify-center border-t border-border/60 bg-white py-5 text-sm text-muted-foreground dark:bg-muted/50'>
               Não tem conta?{" "}
               <Link href='/cadastro' className='ml-1 font-medium text-primary underline-offset-4 hover:underline'>
                 Cadastre-se
