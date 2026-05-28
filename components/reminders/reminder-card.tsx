@@ -1,5 +1,6 @@
 import { Calendar, Clock, MessageSquare } from "lucide-react";
 
+import { EditReminderButton } from "@/components/reminders/edit-reminder-button";
 import { ReminderStatusToggle } from "@/components/reminders/reminder-status-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -75,7 +76,10 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
               locale: ptBR,
             })}
           </p>
-          <ReminderStatusToggle reminder={reminder} variant="button" />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <EditReminderButton reminderId={reminder.id} variant="button" />
+            <ReminderStatusToggle reminder={reminder} variant="button" />
+          </div>
         </div>
       </CardContent>
     </Card>

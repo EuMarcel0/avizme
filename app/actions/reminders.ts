@@ -9,6 +9,16 @@ import {
 } from "@/lib/reminders/create-reminder";
 import { getNextStatusForToggle } from "@/lib/reminders/toggle-reminder-status";
 import {
+  getReminderForEdit,
+  GetReminderForEditError,
+  type ReminderForEdit,
+} from "@/lib/reminders/get-reminder-for-edit";
+import {
+  updateReminder,
+  UpdateReminderError,
+  type UpdateReminderInput,
+} from "@/lib/reminders/update-reminder";
+import {
   updateReminderStatus,
   UpdateReminderStatusError,
 } from "@/lib/reminders/update-reminder-status";
@@ -32,6 +42,40 @@ export async function createReminderAction(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "Não foi possível salvar o lembrete." };
+  }
+}
+
+export type GetReminderForEditActionResult =
+  | { ok: true; data: ReminderForEdit }
+  | { ok: false; error: string };
+
+export async function getReminderForEditAction(
+  reminderId: string,
+): Promise<GetReminderForEditActionResult> {
+  try {
+    const data = await getReminderForEdit(reminderId);
+    return { ok: true, data };
+  } catch (error) {
+    if (error instanceof GetReminderForEditError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "Não foi possível carregar o lembrete." };
+  }
+}
+
+export async function updateReminderAction(
+  reminderId: string,
+  input: UpdateReminderInput,
+): Promise<ActionResult> {
+  try {
+    await updateReminder(reminderId, input);
+    revalidatePath("/app");
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof UpdateReminderError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "Não foi possível atualizar o lembrete." };
   }
 }
 

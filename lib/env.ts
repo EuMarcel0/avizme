@@ -5,6 +5,10 @@ function required(name: string, value: string | undefined): string {
   return value;
 }
 
+function optional(value: string | undefined): string | undefined {
+  return value?.trim() || undefined;
+}
+
 function readSupabaseUrl() {
   return (
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
@@ -28,6 +32,10 @@ export const env = {
     "SUPABASE_PUBLISHABLE_KEY / NEXT_PUBLIC_SUPABASE_ANON_KEY",
     readSupabaseAnonKey(),
   ),
+  /** Service role — apenas rotas cron / jobs (nunca no cliente). */
+  supabaseServiceRoleKey: optional(process.env.SUPABASE_SERVICE_ROLE_KEY),
+  /** Vercel injeta CRON_SECRET e envia Bearer nas chamadas agendadas. */
+  cronSecret: optional(process.env.CRON_SECRET),
 };
 
 export function getDatabaseUrl(): string {
@@ -35,5 +43,12 @@ export function getDatabaseUrl(): string {
     "SUPABASE_DB_DIRECT_CONNECTION_STRING / DATABASE_URL",
     process.env.SUPABASE_DB_DIRECT_CONNECTION_STRING ??
       process.env.DATABASE_URL,
+  );
+}
+
+export function requireServiceRoleKey(): string {
+  return required(
+    "SUPABASE_SERVICE_ROLE_KEY",
+    env.supabaseServiceRoleKey,
   );
 }

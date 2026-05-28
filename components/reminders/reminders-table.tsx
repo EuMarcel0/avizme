@@ -1,4 +1,6 @@
+import { EditReminderButton } from "@/components/reminders/edit-reminder-button";
 import { ReminderStatusToggle } from "@/components/reminders/reminder-status-toggle";
+import { ViewReminderButton } from "@/components/reminders/view-reminder-button";
 import { Badge } from "@/components/ui/badge";
 import type { ReminderListItem } from "@/lib/reminders/map-reminder-row";
 import {
@@ -27,7 +29,7 @@ export function RemindersTable({ reminders }: RemindersTableProps) {
             <th className="px-4 py-3 font-medium">Canais</th>
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium">Criado em</th>
-            <th className="px-4 py-3 font-medium text-right">Ações</th>
+            <th className="px-4 py-3 text-center font-medium">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -76,8 +78,12 @@ export function RemindersTable({ reminders }: RemindersTableProps) {
                   locale: ptBR,
                 })}
               </td>
-              <td className="px-4 py-3 align-top text-right">
-                <ReminderStatusToggle reminder={reminder} variant="button" />
+              <td className="px-4 py-3 align-middle">
+                <div className="flex items-center justify-center gap-1 [&_button]:opacity-70 [&_button]:transition-opacity [&_button:hover]:opacity-100">
+                  <ViewReminderButton reminder={reminder} />
+                  <EditReminderButton reminderId={reminder.id} variant="icon" />
+                  <ReminderStatusToggle reminder={reminder} variant="icon" />
+                </div>
               </td>
             </tr>
           ))}

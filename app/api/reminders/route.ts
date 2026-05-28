@@ -10,16 +10,18 @@ import {
   parseReminderListSearchParams,
   REMINDERS_PAGE_SIZE_GRID,
 } from "@/lib/reminders/reminder-list-params";
+import { ReminderAuthError, requireAuthenticatedUser } from "@/lib/reminders/require-auth";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  try {
+    await requireAuthenticatedUser(supabase);
+  } catch (error) {
+    if (error instanceof ReminderAuthError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+    throw error;
   }
 
   const { searchParams } = new URL(request.url);
@@ -40,6 +42,16 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const supabase = await createClient();
+  try {
+    await requireAuthenticatedUser(supabase);
+  } catch (error) {
+    if (error instanceof ReminderAuthError) {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+    throw error;
+  }
+
   let body: CreateReminderInput;
   try {
     body = (await request.json()) as CreateReminderInput;

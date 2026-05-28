@@ -183,7 +183,7 @@ export function SimpleCalendar({
                   !inRange &&
                   !isStart &&
                   !isEnd &&
-                  "ring-1 ring-aviz-sand/80",
+                  "bg-primary/25 text-foreground hover:bg-primary/35",
               )}
             >
               {format(day, "d")}

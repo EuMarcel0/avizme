@@ -1,6 +1,11 @@
 import "server-only";
 
 import type { ReminderStatus } from "@/lib/reminders/reminder-status";
+import {
+  requireAuthenticatedUser,
+  requireReminderOwnedByUser,
+  ReminderAuthError,
+} from "@/lib/reminders/require-auth";
 import { createClient } from "@/lib/supabase/server";
 
 export class UpdateReminderStatusError extends Error {
@@ -18,28 +23,18 @@ export async function updateReminderStatus(
   nextStatus: ReminderStatus,
 ): Promise<void> {
   const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new UpdateReminderStatusError("Não autenticado", 401);
-  }
-
-  const { data: existing, error: fetchError } = await supabase
-    .from("reminders")
-    .select("id, status")
-    .eq("id", reminderId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (fetchError) {
-    throw new UpdateReminderStatusError(fetchError.message, 500);
-  }
-
-  if (!existing) {
-    throw new UpdateReminderStatusError("Lembrete não encontrado", 404);
+  let user;
+  try {
+    user = await requireAuthenticatedUser(supabase);
+    await requireReminderOwnedByUser(supabase, reminderId, user.id);
+  } catch (error) {
+    if (error instanceof ReminderAuthError) {
+      throw new UpdateReminderStatusError(
+        error.message,
+        error.status === 404 ? 404 : 401,
+      );
+    }
+    throw error;
   }
 
   const { error: updateError } = await supabase

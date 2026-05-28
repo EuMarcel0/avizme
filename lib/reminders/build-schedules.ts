@@ -206,38 +206,4 @@ export function buildSchedulesFromForm(
   }
 }
 
-export function describeScheduleSummary(
-  input: BuildSchedulesInput,
-): string {
-  const schedules = buildSchedulesFromForm(input);
-  if (schedules.length === 0) return "Configure data e horários para ver o resumo.";
-
-  const { mode } = input;
-  const dates = input.selectedDates;
-  const times = input.times;
-
-  if (mode === "single" && dates[0] && times[0]) {
-    return `Uma vez em ${toDateString(dates[0])} às ${times[0]}.`;
-  }
-  if (mode === "same_day_multi" && dates[0]) {
-    return `${times.length} horário(s) no dia ${toDateString(dates[0])}.`;
-  }
-  if (mode === "specific_dates") {
-    return `${dates.length} dia(s) com ${times.length} horário(s) cada.`;
-  }
-  if (mode === "interval" && dates[0]) {
-    return `A cada ${input.intervalDays ?? 1} dia(s) a partir de ${toDateString(dates[0])}, às ${times[0]}.`;
-  }
-  if (mode === "interval_multi" && dates[0]) {
-    return `A cada ${input.intervalDays ?? 1} dia(s) desde ${toDateString(dates[0])}, ${times.length} horário(s) por ocorrência.`;
-  }
-  if (mode === "weekly") {
-    const days = (input.weekdays ?? []).join(", ");
-    return `Semanalmente (${days}) — ${times.length} horário(s).`;
-  }
-  if (mode === "monthly" && input.dayOfMonth) {
-    return `Todo dia ${input.dayOfMonth} do mês — ${times.length} horário(s).`;
-  }
-
-  return `${schedules.length} regra(s) de agendamento.`;
-}
+export { describeScheduleSummary } from "@/lib/reminders/describe-schedule-summary";

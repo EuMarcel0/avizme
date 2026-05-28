@@ -12,6 +12,7 @@ import {
   type RemindersListResponse,
   toRpcDateParam,
 } from "@/lib/reminders/reminder-list-params";
+import { requireAuthenticatedUser } from "@/lib/reminders/require-auth";
 import { createClient } from "@/lib/supabase/server";
 
 const REMINDER_LIST_SELECT = `
@@ -188,11 +189,12 @@ export async function listRemindersPaginated(
   supabase?: SupabaseClient,
 ): Promise<RemindersListResponse> {
   const client = supabase ?? (await createClient());
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) return { items: [], total: 0 };
+  let user;
+  try {
+    user = await requireAuthenticatedUser(client);
+  } catch {
+    return { items: [], total: 0 };
+  }
 
   const rpcResult = await listRemindersViaRpc(client, query);
   if (rpcResult !== null) return rpcResult;

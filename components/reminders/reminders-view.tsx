@@ -6,6 +6,7 @@ import { Filter, LayoutGrid, List, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ReminderCard } from "@/components/reminders/reminder-card";
+import { RemindersGridSkeleton } from "@/components/skeletons";
 import { RemindersFilters } from "@/components/reminders/reminders-filters";
 import { RemindersInfiniteSentinel } from "@/components/reminders/reminders-infinite-sentinel";
 import { RemindersListPagination } from "@/components/reminders/reminders-list-pagination";
@@ -84,19 +85,6 @@ function RemindersViewToggle({
         <List className="size-4" />
         <span className="hidden sm:inline">Lista</span>
       </Button>
-    </div>
-  );
-}
-
-function RemindersGridSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div
-          key={i}
-          className="h-48 animate-pulse rounded-lg border border-border/60 bg-muted/30"
-        />
-      ))}
     </div>
   );
 }
