@@ -44,7 +44,7 @@ export function AppHome({
       </div>
 
       {!hasReminders ? (
-        <Card className="border-border/80 bg-card/90 shadow-sm">
+        <Card className="border-border/80 bg-white shadow-sm dark:bg-card/90">
           <CardHeader>
             <CardTitle>Nenhum lembrete ainda</CardTitle>
             <CardDescription>

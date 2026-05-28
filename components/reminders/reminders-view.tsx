@@ -66,7 +66,7 @@ function RemindersViewToggle({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center gap-1 rounded-lg border border-border/70 bg-muted/20 p-0.5",
+        "flex shrink-0 items-center gap-1 rounded-lg border border-border/70 bg-zinc-100 p-0.5 dark:bg-muted/20",
         className,
       )}
     >
@@ -299,7 +299,7 @@ export function RemindersView({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-lg border border-border/70 bg-card/60 p-3 sm:p-4">
+      <div className="rounded-lg border border-border/70 bg-white p-3 sm:p-4 dark:bg-card/60">
         <div className="flex items-center justify-between gap-3 md:hidden">
           <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
             <SheetTrigger

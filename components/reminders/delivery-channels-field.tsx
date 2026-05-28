@@ -50,7 +50,7 @@ export function DeliveryChannelsField({
   return (
     <div className="space-y-3">
       <Label className="text-sm font-medium">Onde enviar?</Label>
-      <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+      <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-zinc-50 p-3 dark:bg-muted/20">
         <div className="flex gap-3">
           <div
             className={cn(

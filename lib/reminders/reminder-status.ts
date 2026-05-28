@@ -88,7 +88,7 @@ export function reminderStatusBadgeClass(status: ReminderStatus): string {
     case "active":
       return "bg-primary/15 text-primary border-primary/25";
     case "paused":
-      return "bg-aviz-sand/50 text-foreground border-border/80";
+      return "bg-muted text-muted-foreground border-border/80";
     case "completed":
       return "bg-muted/80 text-muted-foreground border-border/70";
     case "archived":

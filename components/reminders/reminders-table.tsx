@@ -19,7 +19,7 @@ type RemindersTableProps = {
 
 export function RemindersTable({ reminders }: RemindersTableProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border/80 bg-card/90 shadow-sm">
+    <div className="overflow-x-auto rounded-lg border border-border/80 bg-white shadow-sm dark:bg-card/90">
       <table className="w-full min-w-[720px] border-collapse text-left text-sm">
         <thead>
           <tr className="border-b border-border/80 bg-muted/30 text-xs text-muted-foreground">

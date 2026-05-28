@@ -26,7 +26,7 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
   return (
     <Card
       className={cn(
-        "flex h-full flex-col border-border/80 bg-card/90 shadow-sm transition-shadow hover:shadow-md",
+        "flex h-full flex-col border-border/80 bg-white shadow-sm transition-shadow hover:shadow-md dark:bg-card/90",
         readOnly && "opacity-90",
       )}
     >

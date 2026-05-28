@@ -85,7 +85,7 @@ export function DatePicker({
           <span className="size-4 shrink-0" />
         )}
       </PopoverTrigger>
-      <PopoverContent align="start" className="p-2">
+      <PopoverContent align="start" className="w-auto p-3">
         <Calendar
           mode="single"
           selected={selected}
@@ -95,17 +95,10 @@ export function DatePicker({
               setOpen(false);
             }
           }}
-          className="p-0 [--cell-size:2.25rem]"
-          classNames={{
-            root: "w-auto",
-            months: "relative w-auto",
-            month: "relative w-auto",
-            weekdays: "grid w-full grid-cols-7",
-            week: "grid w-full grid-cols-7",
-          }}
+          className="p-0 [--cell-size:2.5rem]"
         />
         {value && (
-          <div className="border-t border-border/60 px-2 py-1.5">
+          <div className="mt-2 border-t border-border/60 px-1 pt-2">
             <Button
               type="button"
               variant="ghost"

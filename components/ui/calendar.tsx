@@ -22,26 +22,29 @@ function Calendar({
     <DayPicker
       locale={ptBR}
       showOutsideDays={showOutsideDays}
-      className={cn("w-full p-2 [--cell-size:2.75rem] sm:[--cell-size:3rem]", className)}
+      className={cn("w-full p-1 [--cell-size:2.5rem]", className)}
       classNames={{
         root: cn("w-full", defaultClassNames.root),
         months: cn(
           "relative flex w-full flex-col gap-4",
           defaultClassNames.months,
         ),
-        month: cn("relative flex w-full flex-col gap-3", defaultClassNames.month),
+        month: cn(
+          "relative flex w-full flex-col gap-4 px-1 pb-1",
+          defaultClassNames.month,
+        ),
         nav: cn(
-          "absolute inset-x-0 top-0 z-10 flex w-full items-center justify-between px-0",
+          "absolute inset-x-0 top-0 z-10 flex w-full items-center justify-between px-1",
           defaultClassNames.nav,
         ),
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
-          "size-10 shrink-0 p-0 text-foreground aria-disabled:opacity-40",
+          "size-9 shrink-0 p-0 text-foreground aria-disabled:opacity-40",
           defaultClassNames.button_previous,
         ),
         button_next: cn(
           buttonVariants({ variant: "ghost" }),
-          "size-10 shrink-0 p-0 text-foreground aria-disabled:opacity-40",
+          "size-9 shrink-0 p-0 text-foreground aria-disabled:opacity-40",
           defaultClassNames.button_next,
         ),
         chevron: cn(
@@ -49,38 +52,37 @@ function Calendar({
           defaultClassNames.chevron,
         ),
         month_caption: cn(
-          "flex h-9 w-full items-center justify-center px-10",
+          "flex h-10 w-full items-center justify-center px-11",
           defaultClassNames.month_caption,
         ),
         caption_label: cn(
-          "text-base font-semibold capitalize text-foreground",
+          "text-sm font-semibold capitalize text-foreground",
           defaultClassNames.caption_label,
         ),
-        weekdays: cn("flex w-full", defaultClassNames.weekdays),
+        weekdays: cn(
+          "flex w-full justify-center gap-1.5",
+          defaultClassNames.weekdays,
+        ),
         weekday: cn(
-          "flex flex-1 items-center justify-center text-xs font-medium text-muted-foreground",
+          "flex size-[var(--cell-size)] items-center justify-center text-xs font-medium text-muted-foreground",
           defaultClassNames.weekday,
         ),
-        week: cn("mt-1 flex w-full", defaultClassNames.week),
+        week: cn("mt-1.5 flex w-full justify-center gap-1.5", defaultClassNames.week),
         day: cn(
-          "group/day relative aspect-square flex-1 p-0 text-center select-none",
+          "group/day relative p-0 text-center select-none",
           defaultClassNames.day,
         ),
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "mx-auto size-[var(--cell-size)] rounded-lg p-0 font-normal aria-selected:opacity-100",
-          "hover:bg-aviz-sage/40 data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground",
-          "data-[range-middle=true]:bg-aviz-mint/30 data-[range-start=true]:rounded-l-lg data-[range-end=true]:rounded-r-lg",
+          "size-[var(--cell-size)] rounded-lg border-transparent p-0 text-sm font-normal text-foreground",
+          "focus-visible:border-transparent focus-visible:ring-0",
+          "hover:bg-muted hover:text-foreground",
+          "aria-selected:opacity-100 data-[selected-single=true]:border-transparent data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground",
+          "data-[range-middle=true]:bg-primary/15 data-[range-start=true]:rounded-l-lg data-[range-end=true]:rounded-r-lg",
           defaultClassNames.day_button,
         ),
-        selected: cn(
-          "rounded-lg bg-primary text-primary-foreground",
-          defaultClassNames.selected,
-        ),
-        today: cn(
-          "rounded-lg bg-aviz-sand/60 font-semibold text-foreground",
-          defaultClassNames.today,
-        ),
+        selected: cn(defaultClassNames.selected),
+        today: cn(defaultClassNames.today),
         outside: cn(
           "text-muted-foreground/50 aria-selected:text-muted-foreground",
           defaultClassNames.outside,

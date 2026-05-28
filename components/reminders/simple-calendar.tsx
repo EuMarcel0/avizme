@@ -99,7 +99,7 @@ export function SimpleCalendar({
   return (
     <div
       className={cn(
-        "w-full select-none rounded-lg border border-border/70 bg-card/80 p-2 shadow-sm",
+        "w-full select-none rounded-lg border border-border/70 bg-white p-2 shadow-sm dark:bg-card/80",
         className,
       )}
     >
@@ -175,7 +175,7 @@ export function SimpleCalendar({
                 (inRange || (selected && selectionMode === "range")) &&
                   !isStart &&
                   !isEnd &&
-                  "bg-aviz-mint/25 text-foreground",
+                  "bg-primary/10 text-foreground",
                 (isStart || isEnd || (selected && selectionMode === "single")) &&
                   "bg-primary font-semibold text-primary-foreground hover:bg-primary/90",
                 today &&

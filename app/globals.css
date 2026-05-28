@@ -62,23 +62,23 @@
   --aviz-mint: #7ebea3;
   --aviz-teal: #53a08e;
 
-  --background: var(--aviz-cream);
-  --foreground: #1e3d36;
-  --card: #fffef8;
-  --card-foreground: #1e3d36;
-  --popover: #fffef8;
-  --popover-foreground: #1e3d36;
+  --background: #ffffff;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
   --primary: var(--aviz-teal);
   --primary-foreground: #f8fffc;
-  --secondary: var(--aviz-sand);
-  --secondary-foreground: #2a4a42;
-  --muted: var(--aviz-sage);
-  --muted-foreground: #3d5c54;
-  --accent: var(--aviz-mint);
-  --accent-foreground: #163830;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #3f3f46;
+  --muted: #e4e4e7;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: color-mix(in srgb, var(--aviz-teal) 18%, var(--aviz-sand));
-  --input: color-mix(in srgb, var(--aviz-teal) 8%, #eef1f0);
+  --border: #e4e4e7;
+  --input: #ffffff;
   --ring: var(--aviz-teal);
   --chart-1: var(--aviz-teal);
   --chart-2: var(--aviz-mint);
@@ -86,13 +86,13 @@
   --chart-4: var(--aviz-sand);
   --chart-5: var(--aviz-cream);
   --radius: 0.25rem;
-  --sidebar: var(--aviz-cream);
-  --sidebar-foreground: #1e3d36;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #18181b;
   --sidebar-primary: var(--aviz-teal);
   --sidebar-primary-foreground: #f8fffc;
-  --sidebar-accent: var(--aviz-mint);
-  --sidebar-accent-foreground: #163830;
-  --sidebar-border: color-mix(in srgb, var(--aviz-teal) 18%, var(--aviz-sand));
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
   --sidebar-ring: var(--aviz-teal);
 }
 
@@ -128,6 +128,32 @@
   --sidebar-accent-foreground: #fafafa;
   --sidebar-border: #27272a;
   --sidebar-ring: var(--aviz-mint);
+}
+
+/* react-day-picker: sem azul padrão — só fundos do tema */
+.rdp-root {
+  --rdp-accent-color: var(--primary);
+  --rdp-accent-background-color: transparent;
+  --rdp-today-color: inherit;
+  --rdp-selected-border: transparent;
+  --rdp-day_button-border-radius: 0.5rem;
+}
+
+.rdp-today:not(.rdp-outside) {
+  color: inherit;
+}
+
+.rdp-today:not(.rdp-selected):not(.rdp-outside) .rdp-day_button {
+  background-color: var(--muted);
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.rdp-selected .rdp-day_button {
+  border-color: transparent;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
 }
 
 @layer base {

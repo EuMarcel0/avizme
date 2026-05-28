@@ -44,7 +44,7 @@ export function ReminderFormSkeleton() {
             </div>
             <div className="space-y-3">
               <Skeleton className="h-4 w-28" />
-              <div className="space-y-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+              <div className="space-y-3 rounded-lg border border-border/70 bg-zinc-50 p-3 dark:bg-muted/20">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <Skeleton className="size-4 shrink-0 rounded" />
