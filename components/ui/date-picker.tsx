@@ -85,7 +85,11 @@ export function DatePicker({
           <span className="size-4 shrink-0" />
         )}
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto p-3">
+      <PopoverContent
+        align="center"
+        side="bottom"
+        className="w-[min(calc(100vw-1.5rem),17.5rem)] max-w-[calc(100vw-1.5rem)] p-2 sm:w-auto sm:max-w-none sm:p-3"
+      >
         <Calendar
           mode="single"
           selected={selected}
@@ -95,7 +99,7 @@ export function DatePicker({
               setOpen(false);
             }
           }}
-          className="p-0 [--cell-size:2.5rem]"
+          className="p-0"
         />
         {value && (
           <div className="mt-2 border-t border-border/60 px-1 pt-2">

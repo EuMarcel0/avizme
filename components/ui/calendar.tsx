@@ -22,7 +22,10 @@ function Calendar({
     <DayPicker
       locale={ptBR}
       showOutsideDays={showOutsideDays}
-      className={cn("w-full p-1 [--cell-size:2.5rem]", className)}
+      className={cn(
+        "w-full max-w-[17.5rem] p-0.5 [--cell-size:2rem] sm:max-w-none sm:p-1 sm:[--cell-size:2.5rem]",
+        className,
+      )}
       classNames={{
         root: cn("w-full", defaultClassNames.root),
         months: cn(
@@ -30,51 +33,54 @@ function Calendar({
           defaultClassNames.months,
         ),
         month: cn(
-          "relative flex w-full flex-col gap-4 px-1 pb-1",
+          "relative flex w-full flex-col gap-2 px-0.5 pb-0.5 sm:gap-4 sm:px-1 sm:pb-1",
           defaultClassNames.month,
         ),
         nav: cn(
-          "absolute inset-x-0 top-0 z-10 flex w-full items-center justify-between px-1",
+          "absolute inset-x-0 top-0 z-10 flex w-full items-center justify-between px-0.5 sm:px-1",
           defaultClassNames.nav,
         ),
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
-          "size-9 shrink-0 p-0 text-foreground aria-disabled:opacity-40",
+          "size-8 shrink-0 p-0 text-foreground sm:size-9 aria-disabled:opacity-40",
           defaultClassNames.button_previous,
         ),
         button_next: cn(
           buttonVariants({ variant: "ghost" }),
-          "size-9 shrink-0 p-0 text-foreground aria-disabled:opacity-40",
+          "size-8 shrink-0 p-0 text-foreground sm:size-9 aria-disabled:opacity-40",
           defaultClassNames.button_next,
         ),
         chevron: cn(
-          "size-5 shrink-0 opacity-100",
+          "size-4 shrink-0 opacity-100 sm:size-5",
           defaultClassNames.chevron,
         ),
         month_caption: cn(
-          "flex h-10 w-full items-center justify-center px-11",
+          "flex h-8 w-full items-center justify-center px-9 sm:h-10 sm:px-11",
           defaultClassNames.month_caption,
         ),
         caption_label: cn(
-          "text-sm font-semibold capitalize text-foreground",
+          "text-xs font-semibold capitalize text-foreground sm:text-sm",
           defaultClassNames.caption_label,
         ),
         weekdays: cn(
-          "flex w-full justify-center gap-1.5",
+          "flex w-full justify-center gap-1 sm:gap-1.5",
           defaultClassNames.weekdays,
         ),
         weekday: cn(
-          "flex size-[var(--cell-size)] items-center justify-center text-xs font-medium text-muted-foreground",
+          "flex size-[var(--cell-size)] items-center justify-center text-[0.65rem] font-medium text-muted-foreground sm:text-xs",
           defaultClassNames.weekday,
         ),
-        week: cn("mt-1.5 flex w-full justify-center gap-1.5", defaultClassNames.week),
+        week: cn(
+          "mt-1 flex w-full justify-center gap-1 sm:mt-1.5 sm:gap-1.5",
+          defaultClassNames.week,
+        ),
         day: cn(
           "group/day relative p-0 text-center select-none",
           defaultClassNames.day,
         ),
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "size-[var(--cell-size)] rounded-lg border-transparent p-0 text-sm font-normal text-foreground",
+          "size-[var(--cell-size)] rounded-md border-transparent p-0 text-xs font-normal text-foreground sm:rounded-lg sm:text-sm",
           "focus-visible:border-transparent focus-visible:ring-0",
           "hover:bg-muted hover:text-foreground",
           "aria-selected:opacity-100 data-[selected-single=true]:border-transparent data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground",
