@@ -17,16 +17,16 @@ export function AppShell({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex min-h-dvh bg-white dark:bg-zinc-950">
+    <div className="flex h-dvh overflow-hidden bg-white dark:bg-zinc-950">
       <AppSidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <AppHeader
           user={user}
           mobileNavOpen={mobileNavOpen}
           onMobileNavOpenChange={setMobileNavOpen}
         />
-        <main className="flex-1 bg-white p-4 md:p-6 dark:bg-zinc-950">
+        <main className="min-h-0 flex-1 overflow-y-auto bg-white p-4 md:p-6 dark:bg-zinc-950">
           {children}
         </main>
       </div>

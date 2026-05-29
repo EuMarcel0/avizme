@@ -29,7 +29,7 @@ export function AppHeader({
   onMobileNavOpenChange,
 }: AppHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border/80 bg-white px-4 dark:border-border dark:bg-zinc-950 md:px-6">
+    <header className="z-40 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border/80 bg-white px-4 dark:border-border dark:bg-zinc-950 md:px-6">
       <div className="flex items-center gap-3">
         <Sheet open={mobileNavOpen} onOpenChange={onMobileNavOpenChange}>
           <SheetTrigger
