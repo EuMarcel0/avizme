@@ -36,6 +36,9 @@ export const env = {
   supabaseServiceRoleKey: optional(process.env.SUPABASE_SERVICE_ROLE_KEY),
   /** Vercel injeta CRON_SECRET e envia Bearer nas chamadas agendadas. */
   cronSecret: optional(process.env.CRON_SECRET),
+  /** Resend — envio de e-mail (fase 1). */
+  resendApiKey: optional(process.env.RESEND_API_KEY),
+  emailFrom: optional(process.env.EMAIL_FROM),
 };
 
 export function getDatabaseUrl(): string {
