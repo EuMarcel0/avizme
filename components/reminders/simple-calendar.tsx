@@ -12,30 +12,19 @@ import {
   setMonth,
   setYear,
   startOfMonth,
-  startOfWeek,
+  startOfWeek
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   eachDayInRange,
   getRangeEnds,
   isDateInRangeMiddle,
   isDateInSelection,
-  isPastDate,
+  isPastDate
 } from "@/lib/reminders/date-utils";
 
 export type SimpleCalendarSelectionMode = "single" | "range";
@@ -55,7 +44,7 @@ const CALENDAR_YEAR_COUNT = 12;
 function buildMonthOptions() {
   return Array.from({ length: 12 }, (_, month) => ({
     value: month,
-    label: format(new Date(2024, month, 1), "MMMM", { locale: ptBR }),
+    label: format(new Date(2024, month, 1), "MMMM", { locale: ptBR })
   }));
 }
 
@@ -71,7 +60,7 @@ const YEAR_OPTIONS = buildYearOptions();
 
 function getMonthLabel(month: number) {
   return (
-    MONTH_OPTIONS.find((option) => option.value === month)?.label ??
+    MONTH_OPTIONS.find(option => option.value === month)?.label ??
     format(new Date(2024, month, 1), "MMMM", { locale: ptBR })
   );
 }
@@ -93,16 +82,9 @@ function buildMonthGrid(viewMonth: Date): Date[] {
   return days;
 }
 
-export function SimpleCalendar({
-  selectionMode,
-  selectedDates,
-  onSelectDates,
-  className,
-}: SimpleCalendarProps) {
+export function SimpleCalendar({ selectionMode, selectedDates, onSelectDates, className }: SimpleCalendarProps) {
   const rangeAnchorRef = useRef<Date | null>(null);
-  const [viewMonth, setViewMonth] = useState(() =>
-    startOfMonth(selectedDates[0] ?? new Date()),
-  );
+  const [viewMonth, setViewMonth] = useState(() => startOfMonth(selectedDates[0] ?? new Date()));
 
   const days = useMemo(() => buildMonthGrid(viewMonth), [viewMonth]);
   const { start: rangeStart, end: rangeEnd } = getRangeEnds(selectedDates);
@@ -110,11 +92,11 @@ export function SimpleCalendar({
   const viewYear = viewMonth.getFullYear();
 
   function handleMonthChange(month: number) {
-    setViewMonth((current) => startOfMonth(setMonth(current, month)));
+    setViewMonth(current => startOfMonth(setMonth(current, month)));
   }
 
   function handleYearChange(year: number) {
-    setViewMonth((current) => startOfMonth(setYear(current, year)));
+    setViewMonth(current => startOfMonth(setYear(current, year)));
   }
 
   function handleDayClick(day: Date) {
@@ -147,45 +129,31 @@ export function SimpleCalendar({
     <div
       className={cn(
         "w-full select-none rounded-lg border border-border/70 bg-white p-2 shadow-sm dark:bg-card/80",
-        className,
+        className
       )}
     >
-      <div className="grid w-full grid-cols-7 items-center gap-0.5">
-        <NavButton
-          label="Ano anterior"
-          onClick={() => setViewMonth((m) => addYears(m, -1))}
-        >
-          <ChevronsLeft className="size-4" />
+      <div className='grid w-full grid-cols-7 items-center gap-0.5'>
+        <NavButton label='Ano anterior' onClick={() => setViewMonth(m => addYears(m, -1))}>
+          <ChevronsLeft className='size-4' />
         </NavButton>
-        <NavButton
-          label="Mês anterior"
-          onClick={() => setViewMonth((m) => addMonths(m, -1))}
-        >
-          <ChevronLeft className="size-4" />
+        <NavButton label='Mês anterior' onClick={() => setViewMonth(m => addMonths(m, -1))}>
+          <ChevronLeft className='size-4' />
         </NavButton>
-        <div className="col-span-3 flex min-w-0 items-center justify-center gap-0.5 px-0.5">
+        <div className='col-span-3 flex min-w-0 items-center justify-center gap-0.5 px-0.5'>
           <Select
             value={String(viewMonthIndex)}
-            onValueChange={(value) =>
-              handleMonthChange(Number.parseInt(value, 10))
-            }
+            onValueChange={value => {
+              if (value) {
+                handleMonthChange(Number.parseInt(value, 10));
+              }
+            }}
           >
-            <SelectTrigger
-              aria-label="Mês"
-              size="sm"
-              className={captionSelectTriggerClassName}
-            >
-              <SelectValue className="capitalize">
-                {getMonthLabel(viewMonthIndex)}
-              </SelectValue>
+            <SelectTrigger aria-label='Mês' size='sm' className={captionSelectTriggerClassName}>
+              <SelectValue className='capitalize'>{getMonthLabel(viewMonthIndex)}</SelectValue>
             </SelectTrigger>
-            <SelectContent align="center">
+            <SelectContent align='center'>
               {MONTH_OPTIONS.map(({ value, label }) => (
-                <SelectItem
-                  key={value}
-                  value={String(value)}
-                  className="capitalize"
-                >
+                <SelectItem key={value} value={String(value)} className='capitalize'>
                   {label}
                 </SelectItem>
               ))}
@@ -193,18 +161,16 @@ export function SimpleCalendar({
           </Select>
           <Select
             value={String(viewYear)}
-            onValueChange={(value) =>
-              handleYearChange(Number.parseInt(value, 10))
-            }
+            onValueChange={value => {
+              if (value) {
+                handleYearChange(Number.parseInt(value, 10));
+              }
+            }}
           >
-            <SelectTrigger
-              aria-label="Ano"
-              size="sm"
-              className={captionSelectTriggerClassName}
-            >
+            <SelectTrigger aria-label='Ano' size='sm' className={captionSelectTriggerClassName}>
               <SelectValue>{String(viewYear)}</SelectValue>
             </SelectTrigger>
-            <SelectContent align="center">
+            <SelectContent align='center'>
               {YEAR_OPTIONS.map(({ value, label }) => (
                 <SelectItem key={value} value={String(value)}>
                   {label}
@@ -213,33 +179,27 @@ export function SimpleCalendar({
             </SelectContent>
           </Select>
         </div>
-        <NavButton
-          label="Próximo mês"
-          onClick={() => setViewMonth((m) => addMonths(m, 1))}
-        >
-          <ChevronRight className="size-4" />
+        <NavButton label='Próximo mês' onClick={() => setViewMonth(m => addMonths(m, 1))}>
+          <ChevronRight className='size-4' />
         </NavButton>
-        <NavButton
-          label="Próximo ano"
-          onClick={() => setViewMonth((m) => addYears(m, 1))}
-        >
-          <ChevronsRight className="size-4" />
+        <NavButton label='Próximo ano' onClick={() => setViewMonth(m => addYears(m, 1))}>
+          <ChevronsRight className='size-4' />
         </NavButton>
       </div>
 
-      <div className="mt-1.5 grid w-full grid-cols-7 gap-0.5">
-        {WEEKDAYS.map((label) => (
+      <div className='mt-1.5 grid w-full grid-cols-7 gap-0.5'>
+        {WEEKDAYS.map(label => (
           <div
             key={label}
-            className="flex h-6 items-center justify-center text-[0.65rem] font-medium text-muted-foreground"
+            className='flex h-6 items-center justify-center text-[0.65rem] font-medium text-muted-foreground'
           >
             {label}
           </div>
         ))}
       </div>
 
-      <div className="grid w-full grid-cols-7 gap-0.5">
-        {days.map((day) => {
+      <div className='grid w-full grid-cols-7 gap-0.5'>
+        {days.map(day => {
           const disabled = isPastDate(day);
           const outside = !isSameMonth(day, viewMonth);
           const selected = isDateInSelection(day, selectedDates);
@@ -251,19 +211,14 @@ export function SimpleCalendar({
           return (
             <button
               key={day.toISOString()}
-              type="button"
+              type='button'
               disabled={disabled}
               onClick={() => handleDayClick(day)}
               className={cn(
                 "flex h-8 w-full items-center justify-center rounded-md text-xs font-medium transition-colors",
                 disabled && "cursor-not-allowed opacity-35",
                 outside && !selected && !inRange && "text-muted-foreground/45",
-                !disabled &&
-                  !selected &&
-                  !inRange &&
-                  !isStart &&
-                  !isEnd &&
-                  "text-foreground hover:bg-muted/60",
+                !disabled && !selected && !inRange && !isStart && !isEnd && "text-foreground hover:bg-muted/60",
                 (inRange || (selected && selectionMode === "range")) &&
                   !isStart &&
                   !isEnd &&
@@ -275,7 +230,7 @@ export function SimpleCalendar({
                   !inRange &&
                   !isStart &&
                   !isEnd &&
-                  "bg-primary/25 text-foreground hover:bg-primary/35",
+                  "bg-primary/25 text-foreground hover:bg-primary/35"
               )}
             >
               {format(day, "d")}
@@ -287,21 +242,13 @@ export function SimpleCalendar({
   );
 }
 
-function NavButton({
-  children,
-  label,
-  onClick,
-}: {
-  children: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
+function NavButton({ children, label, onClick }: { children: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <button
-      type="button"
+      type='button'
       aria-label={label}
       onClick={onClick}
-      className="flex h-7 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted/60"
+      className='flex h-7 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted/60'
     >
       {children}
     </button>
