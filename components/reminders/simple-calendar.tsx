@@ -9,6 +9,8 @@ import {
   format,
   isSameDay,
   isSameMonth,
+  setMonth,
+  setYear,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -20,6 +22,13 @@ import {
   ChevronsRight,
 } from "lucide-react";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   eachDayInRange,
@@ -39,6 +48,36 @@ type SimpleCalendarProps = {
 };
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+const CALENDAR_YEAR_START = new Date().getFullYear() - 1;
+const CALENDAR_YEAR_COUNT = 12;
+
+function buildMonthOptions() {
+  return Array.from({ length: 12 }, (_, month) => ({
+    value: month,
+    label: format(new Date(2024, month, 1), "MMMM", { locale: ptBR }),
+  }));
+}
+
+function buildYearOptions() {
+  return Array.from({ length: CALENDAR_YEAR_COUNT }, (_, index) => {
+    const year = CALENDAR_YEAR_START + index;
+    return { value: year, label: String(year) };
+  });
+}
+
+const MONTH_OPTIONS = buildMonthOptions();
+const YEAR_OPTIONS = buildYearOptions();
+
+function getMonthLabel(month: number) {
+  return (
+    MONTH_OPTIONS.find((option) => option.value === month)?.label ??
+    format(new Date(2024, month, 1), "MMMM", { locale: ptBR })
+  );
+}
+
+const captionSelectTriggerClassName =
+  "h-7 w-auto shrink-0 border-0 bg-transparent px-1 pr-1 shadow-none focus-visible:border-transparent focus-visible:ring-0 text-sm font-semibold capitalize text-foreground [&_svg]:size-3.5 [&_[data-slot=select-value]]:line-clamp-none [&_[data-slot=select-value]]:overflow-visible [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:flex-none";
 
 function buildMonthGrid(viewMonth: Date): Date[] {
   const monthStart = startOfMonth(viewMonth);
@@ -67,8 +106,16 @@ export function SimpleCalendar({
 
   const days = useMemo(() => buildMonthGrid(viewMonth), [viewMonth]);
   const { start: rangeStart, end: rangeEnd } = getRangeEnds(selectedDates);
+  const viewMonthIndex = viewMonth.getMonth();
+  const viewYear = viewMonth.getFullYear();
 
-  const caption = format(viewMonth, "MMMM yyyy", { locale: ptBR });
+  function handleMonthChange(month: number) {
+    setViewMonth((current) => startOfMonth(setMonth(current, month)));
+  }
+
+  function handleYearChange(year: number) {
+    setViewMonth((current) => startOfMonth(setYear(current, year)));
+  }
 
   function handleDayClick(day: Date) {
     if (isPastDate(day)) return;
@@ -116,10 +163,55 @@ export function SimpleCalendar({
         >
           <ChevronLeft className="size-4" />
         </NavButton>
-        <div className="col-span-3 flex items-center justify-center px-0.5">
-          <span className="text-center text-sm font-semibold capitalize text-foreground">
-            {caption}
-          </span>
+        <div className="col-span-3 flex min-w-0 items-center justify-center gap-0.5 px-0.5">
+          <Select
+            value={String(viewMonthIndex)}
+            onValueChange={(value) =>
+              handleMonthChange(Number.parseInt(value, 10))
+            }
+          >
+            <SelectTrigger
+              aria-label="Mês"
+              size="sm"
+              className={captionSelectTriggerClassName}
+            >
+              <SelectValue className="capitalize">
+                {getMonthLabel(viewMonthIndex)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent align="center">
+              {MONTH_OPTIONS.map(({ value, label }) => (
+                <SelectItem
+                  key={value}
+                  value={String(value)}
+                  className="capitalize"
+                >
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={String(viewYear)}
+            onValueChange={(value) =>
+              handleYearChange(Number.parseInt(value, 10))
+            }
+          >
+            <SelectTrigger
+              aria-label="Ano"
+              size="sm"
+              className={captionSelectTriggerClassName}
+            >
+              <SelectValue>{String(viewYear)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent align="center">
+              {YEAR_OPTIONS.map(({ value, label }) => (
+                <SelectItem key={value} value={String(value)}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <NavButton
           label="Próximo mês"
