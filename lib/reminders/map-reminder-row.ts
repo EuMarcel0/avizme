@@ -4,16 +4,11 @@ import { ptBR } from "date-fns/locale";
 import type { ScheduleType } from "@/lib/schedule-types";
 import { SCHEDULE_TYPE_LABELS, DELIVERY_CHANNEL_LABELS } from "@/lib/schedule-types";
 import type { ReminderStatus } from "@/lib/reminders/reminder-status";
+import { buildReminderDetails } from "@/lib/reminders/describe-reminder-details";
+import type { ScheduleRowForForm } from "@/lib/reminders/map-schedule-rows-to-form";
 
-type ScheduleRow = {
-  schedule_type: ScheduleType;
-  start_date: string | null;
-  end_date: string | null;
-  interval_days: number | null;
-  times: string[] | null;
-  dates: string[] | null;
-  weekdays: number[] | null;
-  day_of_month: number | null;
+type ScheduleRow = ScheduleRowForForm & {
+  schedule_type: ScheduleType | string;
 };
 
 type ChannelRow = {
@@ -33,6 +28,8 @@ export type ReminderListItem = {
   scheduleDateLabel: string | null;
   timesLabel: string;
   channels: Array<keyof typeof DELIVERY_CHANNEL_LABELS>;
+  deliveryDetails: string;
+  cycleEndDetails: string;
 };
 
 function formatIsoDate(iso: string | null): string | null {
@@ -59,7 +56,9 @@ function earliestScheduleDate(schedules: ScheduleRow[]): string | null {
 function buildScheduleSummary(schedules: ScheduleRow[]): string {
   if (schedules.length === 0) return "Sem agendamento";
   const primary = schedules[0];
-  const typeLabel = SCHEDULE_TYPE_LABELS[primary.schedule_type] ?? primary.schedule_type;
+  const typeLabel =
+    SCHEDULE_TYPE_LABELS[primary.schedule_type as ScheduleType] ??
+    primary.schedule_type;
   const times = primary.times ?? [];
   const timePart =
     times.length > 0
@@ -97,10 +96,12 @@ export function mapReminderRow(row: {
   reminder_delivery_channels: ChannelRow[] | null;
 }): ReminderListItem {
   const schedules = row.reminder_schedules ?? [];
+  const channelRows = row.reminder_delivery_channels ?? [];
   const scheduleDateIso = earliestScheduleDate(schedules);
   const times = [
     ...new Set(schedules.flatMap((s) => s.times ?? []).filter(Boolean)),
   ].sort();
+  const details = buildReminderDetails(schedules, channelRows, row.status);
 
   return {
     id: row.id,
@@ -113,8 +114,10 @@ export function mapReminderRow(row: {
     scheduleDateIso,
     scheduleDateLabel: formatIsoDate(scheduleDateIso),
     timesLabel: times.length > 0 ? times.join(", ") : "—",
-    channels: (row.reminder_delivery_channels ?? [])
+    channels: channelRows
       .filter((c) => c.is_enabled)
       .map((c) => c.channel),
+    deliveryDetails: details.deliveryDetails,
+    cycleEndDetails: details.cycleEndDetails,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Clock, Eye } from "lucide-react";
+import { Info } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,7 @@ import {
   REMINDER_STATUS_LABELS,
   reminderStatusBadgeClass,
 } from "@/lib/reminders/reminder-status";
-import { DELIVERY_CHANNEL_LABELS } from "@/lib/schedule-types";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 type ViewReminderButtonProps = {
   reminder: ReminderListItem;
@@ -21,19 +18,14 @@ type ViewReminderButtonProps = {
   className?: string;
 };
 
-function ReminderViewContent({ reminder }: { reminder: ReminderListItem }) {
+function ReminderDetailsContent({ reminder }: { reminder: ReminderListItem }) {
   return (
-    <div className="space-y-4 px-5 py-4 text-sm">
+    <div className="space-y-5 px-5 py-4 text-sm">
       <div>
         <p className="text-xs font-medium text-muted-foreground">Título</p>
         <p className="mt-1 font-semibold text-foreground">{reminder.title}</p>
       </div>
-      <div>
-        <p className="text-xs font-medium text-muted-foreground">Mensagem</p>
-        <p className="mt-1 whitespace-pre-wrap text-foreground">
-          {reminder.message}
-        </p>
-      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium text-muted-foreground">Status</span>
         <Badge
@@ -46,38 +38,31 @@ function ReminderViewContent({ reminder }: { reminder: ReminderListItem }) {
           {REMINDER_STATUS_LABELS[reminder.status]}
         </Badge>
       </div>
-      <div className="space-y-2 text-muted-foreground">
-        <p className="flex items-center gap-2">
-          <Calendar className="size-4 shrink-0 text-primary" />
-          <span>
-            {reminder.scheduleDateLabel ?? "—"} · {reminder.scheduleSummary}
-          </span>
+
+      <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Como você receberá
         </p>
-        <p className="flex items-center gap-2">
-          <Clock className="size-4 shrink-0 text-primary" />
-          {reminder.timesLabel}
+        <p className="leading-relaxed text-foreground">
+          {reminder.deliveryDetails}
         </p>
       </div>
+
+      <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Quando o ciclo encerra
+        </p>
+        <p className="leading-relaxed text-foreground">
+          {reminder.cycleEndDetails}
+        </p>
+      </div>
+
       <div>
-        <p className="text-xs font-medium text-muted-foreground">Canais</p>
-        <div className="mt-2 flex flex-wrap gap-1">
-          {reminder.channels.length > 0 ? (
-            reminder.channels.map((ch) => (
-              <Badge key={ch} variant="secondary" className="text-[0.65rem]">
-                {DELIVERY_CHANNEL_LABELS[ch]}
-              </Badge>
-            ))
-          ) : (
-            <span className="text-muted-foreground">Nenhum canal</span>
-          )}
-        </div>
+        <p className="text-xs font-medium text-muted-foreground">Mensagem</p>
+        <p className="mt-1 whitespace-pre-wrap text-foreground">
+          {reminder.message}
+        </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Criado em{" "}
-        {format(new Date(reminder.createdAt), "dd/MM/yyyy 'às' HH:mm", {
-          locale: ptBR,
-        })}
-      </p>
     </div>
   );
 }
@@ -92,12 +77,9 @@ export function ViewReminderButton({
   function handleOpen() {
     openModal({
       title: "Detalhes do lembrete",
-      description:
-        reminder.status === "completed"
-          ? "Ciclo finalizado — apenas visualização."
-          : undefined,
-      className: "w-[min(96vw,32rem)] max-w-[min(96vw,32rem)]",
-      content: <ReminderViewContent reminder={reminder} />,
+      description: reminder.title,
+      className: "w-[min(96vw,34rem)] max-w-[min(96vw,34rem)]",
+      content: <ReminderDetailsContent reminder={reminder} />,
     });
   }
 
@@ -110,8 +92,8 @@ export function ViewReminderButton({
         className={cn("h-8 gap-1.5 text-xs", className)}
         onClick={handleOpen}
       >
-        <Eye className="size-3.5" />
-        Ver
+        <Info className="size-3.5" />
+        Detalhes
       </Button>
     );
   }
@@ -123,9 +105,10 @@ export function ViewReminderButton({
       size="icon-sm"
       className={cn("shrink-0", className)}
       onClick={handleOpen}
-      aria-label="Ver lembrete"
+      aria-label="Detalhes do lembrete"
+      title="Detalhes"
     >
-      <Eye className="size-4" />
+      <Info className="size-4" />
     </Button>
   );
 }

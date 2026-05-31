@@ -60,6 +60,9 @@ function inferMode(rows: ScheduleRowForForm[]): ScheduleMode {
   if (type === "custom" && primary.config?.pattern === "specific_dates") {
     return "specific_dates";
   }
+  if (type === "custom" && (primary.dates?.length ?? 0) > 1) {
+    return "specific_dates";
+  }
   if (type === "single") return "single";
   if (type === "interval") return "interval";
   if (type === "interval_multi") return "interval_multi";

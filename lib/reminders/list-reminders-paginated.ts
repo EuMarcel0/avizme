@@ -33,7 +33,9 @@ const REMINDER_LIST_SELECT = `
     times,
     dates,
     weekdays,
-    day_of_month
+    day_of_month,
+    config,
+    sort_order
   ),
   reminder_delivery_channels (
     channel,

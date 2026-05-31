@@ -77,7 +77,7 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
             <span className="text-muted-foreground">Sem canal</span>
           )}
         </div>
-        <div className="flex items-center justify-between gap-2 border-t border-border/50 pt-2">
+        <div className="flex flex-col gap-2 border-t border-border/50 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
             <MessageSquare className="size-3" />
             Criado em{" "}
@@ -85,10 +85,9 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
               locale: ptBR,
             })}
           </p>
-          <div className="flex shrink-0 items-center gap-1.5">
-            {readOnly ? (
-              <ViewReminderButton reminder={reminder} variant="button" />
-            ) : (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <ViewReminderButton reminder={reminder} variant="button" />
+            {!readOnly && (
               <>
                 <EditReminderButton reminderId={reminder.id} variant="button" />
                 <ReminderStatusToggle reminder={reminder} variant="button" />

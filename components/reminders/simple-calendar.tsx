@@ -82,6 +82,95 @@ function buildMonthGrid(viewMonth: Date): Date[] {
   return days;
 }
 
+function CalendarMonthYearSelects({
+  viewMonthIndex,
+  viewYear,
+  onMonthChange,
+  onYearChange,
+  className
+}: {
+  viewMonthIndex: number;
+  viewYear: number;
+  onMonthChange: (month: number) => void;
+  onYearChange: (year: number) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex min-w-0 items-center justify-center gap-0.5 px-0.5", className)}>
+      <Select
+        value={String(viewMonthIndex)}
+        onValueChange={value => {
+          if (value) {
+            onMonthChange(Number.parseInt(value, 10));
+          }
+        }}
+      >
+        <SelectTrigger aria-label='Mês' size='sm' className={captionSelectTriggerClassName}>
+          <SelectValue className='capitalize'>{getMonthLabel(viewMonthIndex)}</SelectValue>
+        </SelectTrigger>
+        <SelectContent align='center'>
+          {MONTH_OPTIONS.map(({ value, label }) => (
+            <SelectItem key={value} value={String(value)} className='capitalize'>
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={String(viewYear)}
+        onValueChange={value => {
+          if (value) {
+            onYearChange(Number.parseInt(value, 10));
+          }
+        }}
+      >
+        <SelectTrigger aria-label='Ano' size='sm' className={captionSelectTriggerClassName}>
+          <SelectValue>{String(viewYear)}</SelectValue>
+        </SelectTrigger>
+        <SelectContent align='center'>
+          {YEAR_OPTIONS.map(({ value, label }) => (
+            <SelectItem key={value} value={String(value)}>
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function CalendarNavButtons({
+  onPrevYear,
+  onPrevMonth,
+  onNextMonth,
+  onNextYear,
+  middleSlot
+}: {
+  onPrevYear: () => void;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+  onNextYear: () => void;
+  middleSlot?: React.ReactNode;
+}) {
+  return (
+    <>
+      <NavButton label='Ano anterior' onClick={onPrevYear}>
+        <ChevronsLeft className='size-4' />
+      </NavButton>
+      <NavButton label='Mês anterior' onClick={onPrevMonth}>
+        <ChevronLeft className='size-4' />
+      </NavButton>
+      {middleSlot}
+      <NavButton label='Próximo mês' onClick={onNextMonth}>
+        <ChevronRight className='size-4' />
+      </NavButton>
+      <NavButton label='Próximo ano' onClick={onNextYear}>
+        <ChevronsRight className='size-4' />
+      </NavButton>
+    </>
+  );
+}
+
 export function SimpleCalendar({ selectionMode, selectedDates, onSelectDates, className }: SimpleCalendarProps) {
   const rangeAnchorRef = useRef<Date | null>(null);
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(selectedDates[0] ?? new Date()));
@@ -132,59 +221,40 @@ export function SimpleCalendar({ selectionMode, selectedDates, onSelectDates, cl
         className
       )}
     >
-      <div className='grid w-full grid-cols-7 items-center gap-0.5'>
-        <NavButton label='Ano anterior' onClick={() => setViewMonth(m => addYears(m, -1))}>
-          <ChevronsLeft className='size-4' />
-        </NavButton>
-        <NavButton label='Mês anterior' onClick={() => setViewMonth(m => addMonths(m, -1))}>
-          <ChevronLeft className='size-4' />
-        </NavButton>
-        <div className='col-span-3 flex min-w-0 items-center justify-center gap-0.5 px-0.5'>
-          <Select
-            value={String(viewMonthIndex)}
-            onValueChange={value => {
-              if (value) {
-                handleMonthChange(Number.parseInt(value, 10));
-              }
-            }}
-          >
-            <SelectTrigger aria-label='Mês' size='sm' className={captionSelectTriggerClassName}>
-              <SelectValue className='capitalize'>{getMonthLabel(viewMonthIndex)}</SelectValue>
-            </SelectTrigger>
-            <SelectContent align='center'>
-              {MONTH_OPTIONS.map(({ value, label }) => (
-                <SelectItem key={value} value={String(value)} className='capitalize'>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={String(viewYear)}
-            onValueChange={value => {
-              if (value) {
-                handleYearChange(Number.parseInt(value, 10));
-              }
-            }}
-          >
-            <SelectTrigger aria-label='Ano' size='sm' className={captionSelectTriggerClassName}>
-              <SelectValue>{String(viewYear)}</SelectValue>
-            </SelectTrigger>
-            <SelectContent align='center'>
-              {YEAR_OPTIONS.map(({ value, label }) => (
-                <SelectItem key={value} value={String(value)}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className='space-y-1 sm:hidden'>
+        <CalendarMonthYearSelects
+          viewMonthIndex={viewMonthIndex}
+          viewYear={viewYear}
+          onMonthChange={handleMonthChange}
+          onYearChange={handleYearChange}
+        />
+        <div className='grid w-full grid-cols-7 items-center gap-0.5'>
+          <CalendarNavButtons
+            onPrevYear={() => setViewMonth(m => addYears(m, -1))}
+            onPrevMonth={() => setViewMonth(m => addMonths(m, -1))}
+            onNextMonth={() => setViewMonth(m => addMonths(m, 1))}
+            onNextYear={() => setViewMonth(m => addYears(m, 1))}
+            middleSlot={<div className='col-span-3' aria-hidden='true' />}
+          />
         </div>
-        <NavButton label='Próximo mês' onClick={() => setViewMonth(m => addMonths(m, 1))}>
-          <ChevronRight className='size-4' />
-        </NavButton>
-        <NavButton label='Próximo ano' onClick={() => setViewMonth(m => addYears(m, 1))}>
-          <ChevronsRight className='size-4' />
-        </NavButton>
+      </div>
+
+      <div className='hidden w-full grid-cols-7 items-center gap-0.5 sm:grid'>
+        <CalendarNavButtons
+          onPrevYear={() => setViewMonth(m => addYears(m, -1))}
+          onPrevMonth={() => setViewMonth(m => addMonths(m, -1))}
+          onNextMonth={() => setViewMonth(m => addMonths(m, 1))}
+          onNextYear={() => setViewMonth(m => addYears(m, 1))}
+          middleSlot={
+            <CalendarMonthYearSelects
+              className='col-span-3'
+              viewMonthIndex={viewMonthIndex}
+              viewYear={viewYear}
+              onMonthChange={handleMonthChange}
+              onYearChange={handleYearChange}
+            />
+          }
+        />
       </div>
 
       <div className='mt-1.5 grid w-full grid-cols-7 gap-0.5'>
