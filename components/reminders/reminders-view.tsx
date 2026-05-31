@@ -32,6 +32,7 @@ import {
 } from "@/lib/reminders/reminder-list-params";
 import {
   invalidateRemindersQueries,
+  remindersListQueryOptions,
   remindersQueryKeys,
   type RemindersQueryFilters,
 } from "@/lib/reminders/reminders-query-keys";
@@ -179,6 +180,7 @@ export function RemindersView({
       return loaded < lastPage.total ? loaded : undefined;
     },
     enabled: showGrid,
+    ...remindersListQueryOptions,
   });
 
   const listQuery = useQuery({
@@ -190,6 +192,7 @@ export function RemindersView({
         limit: REMINDERS_PAGE_SIZE_LIST,
       }),
     enabled: showList,
+    ...remindersListQueryOptions,
   });
 
   const activeQuery = showList ? listQuery : infiniteQuery;

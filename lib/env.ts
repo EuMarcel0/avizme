@@ -39,6 +39,12 @@ export const env = {
   /** Resend — envio de e-mail (fase 1). */
   resendApiKey: optional(process.env.RESEND_API_KEY),
   emailFrom: optional(process.env.EMAIL_FROM),
+  /** Twilio — envio de SMS (fase 2). */
+  twilioAccountSid: optional(process.env.TWILIO_ACCOUNT_SID),
+  twilioAuthToken: optional(process.env.TWILIO_AUTH_TOKEN),
+  /** Número remetente E.164 (ex.: +551140000000) ou use TWILIO_MESSAGING_SERVICE_SID. */
+  twilioPhoneNumber: optional(process.env.TWILIO_PHONE_NUMBER),
+  twilioMessagingServiceSid: optional(process.env.TWILIO_MESSAGING_SERVICE_SID),
 };
 
 export function getDatabaseUrl(): string {

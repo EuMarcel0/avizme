@@ -15,6 +15,13 @@ export const remindersQueryKeys = {
     [...remindersQueryKeys.all, "list", filters, page] as const,
 };
 
+/** Lista sempre considerada stale; atualiza ao voltar à aba ou reconectar. */
+export const remindersListQueryOptions = {
+  staleTime: 0,
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
+} as const;
+
 export function invalidateRemindersQueries(queryClient: QueryClient) {
   return queryClient.resetQueries({ queryKey: remindersQueryKeys.all });
 }
