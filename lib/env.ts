@@ -45,6 +45,8 @@ export const env = {
   /** Número remetente E.164 (ex.: +551140000000) ou use TWILIO_MESSAGING_SERVICE_SID. */
   twilioPhoneNumber: optional(process.env.TWILIO_PHONE_NUMBER),
   twilioMessagingServiceSid: optional(process.env.TWILIO_MESSAGING_SERVICE_SID),
+  /** Remetente WhatsApp Twilio (ex.: whatsapp:+14155238886 no sandbox). */
+  twilioWhatsappFrom: optional(process.env.TWILIO_WHATSAPP_FROM),
 };
 
 export function getDatabaseUrl(): string {
