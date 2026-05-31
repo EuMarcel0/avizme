@@ -77,7 +77,7 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
             <span className="text-muted-foreground">Sem canal</span>
           )}
         </div>
-        <div className="flex flex-col gap-2 border-t border-border/50 pt-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 border-t border-border/50 pt-2">
           <p className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
             <MessageSquare className="size-3" />
             Criado em{" "}
