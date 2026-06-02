@@ -1,4 +1,7 @@
 import { AppHome } from "@/components/app/app-home";
+import { toClientBillingInfo } from "@/lib/billing/client-billing";
+import { getAuthenticatedUserBillingContext } from "@/lib/billing/get-user-billing";
+import { isStripeConfigured } from "@/lib/billing/stripe-config";
 import { userHasOngoingReminders } from "@/lib/reminders/list-reminders";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,6 +24,13 @@ export default async function AppHomePage() {
         .maybeSingle()
     : { data: null };
 
+  const billingContext = user
+    ? await getAuthenticatedUserBillingContext()
+    : null;
+  const billing = billingContext
+    ? toClientBillingInfo(billingContext, isStripeConfigured())
+    : undefined;
+
   const hasReminders = await userHasOngoingReminders();
 
   return (
@@ -29,6 +39,7 @@ export default async function AppHomePage() {
       userEmail={profile?.email ?? user?.email ?? null}
       userPhone={profile?.phone ?? null}
       hasReminders={hasReminders}
+      billing={billing}
     />
   );
 }

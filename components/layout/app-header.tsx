@@ -3,7 +3,7 @@
 import { Menu } from "lucide-react";
 import Image from "next/image";
 
-import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { NewReminderButton } from "@/components/reminders/new-reminder-button";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -16,15 +16,22 @@ import type { AppUser } from "@/lib/users/display-user";
 
 import { AppSidebarNav } from "./app-sidebar-nav";
 import { UserMenu } from "./user-menu";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 
 type AppHeaderProps = {
   user: AppUser;
+  userEmail?: string | null;
+  userPhone?: string | null;
+  billing?: ClientBillingInfo;
   mobileNavOpen: boolean;
   onMobileNavOpenChange: (open: boolean) => void;
 };
 
 export function AppHeader({
   user,
+  userEmail,
+  userPhone,
+  billing,
   mobileNavOpen,
   onMobileNavOpenChange,
 }: AppHeaderProps) {
@@ -66,8 +73,13 @@ export function AppHeader({
         </Sheet>
       </div>
 
-      <div className="flex items-center gap-1">
-        <ThemeToggle />
+      <div className="flex items-center gap-1 sm:gap-2">
+        <NewReminderButton
+          inHeader
+          userEmail={userEmail}
+          userPhone={userPhone}
+          billing={billing}
+        />
         <UserMenu user={user} />
       </div>
     </header>

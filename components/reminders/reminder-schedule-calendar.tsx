@@ -12,6 +12,7 @@ import {
 } from "@/components/reminders/simple-calendar";
 import type { ScheduleMode } from "@/lib/reminders/build-schedules";
 import {
+  calendarAllowsRangeSelection,
   calendarHint,
   calendarSelectionMode,
 } from "@/lib/reminders/schedule-modes";
@@ -42,6 +43,7 @@ export function ReminderScheduleCalendar({
   onSelectDates,
   className,
 }: ReminderScheduleCalendarProps) {
+  const allowsRange = calendarAllowsRangeSelection(mode);
   const defaultPickMode = calendarSelectionMode(mode);
   const [pickMode, setPickMode] =
     useState<SimpleCalendarSelectionMode>(defaultPickMode);
@@ -65,26 +67,28 @@ export function ReminderScheduleCalendar({
     <div className={cn("space-y-2", className)}>
       <div className="flex flex-col items-center gap-2">
         <p className="text-center text-xs text-muted-foreground">{hint}</p>
-        <div className="inline-flex rounded-lg border border-border/70 bg-muted/20 p-0.5">
-          <Button
-            type="button"
-            variant={pickMode === "single" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-3 text-xs"
-            onClick={() => handlePickModeChange("single")}
-          >
-            Dia
-          </Button>
-          <Button
-            type="button"
-            variant={pickMode === "range" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-3 text-xs"
-            onClick={() => handlePickModeChange("range")}
-          >
-            Período
-          </Button>
-        </div>
+        {allowsRange ? (
+          <div className="inline-flex rounded-lg border border-border/70 bg-muted/20 p-0.5">
+            <Button
+              type="button"
+              variant={pickMode === "single" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-3 text-xs"
+              onClick={() => handlePickModeChange("single")}
+            >
+              Dia
+            </Button>
+            <Button
+              type="button"
+              variant={pickMode === "range" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-3 text-xs"
+              onClick={() => handlePickModeChange("range")}
+            >
+              Período
+            </Button>
+          </div>
+        ) : null}
       </div>
       <SimpleCalendar
         selectionMode={pickMode}

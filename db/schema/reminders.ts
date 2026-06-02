@@ -65,6 +65,8 @@ export const reminderDeliveryChannels = pgTable("reminder_delivery_channels", {
     .references(() => reminders.id, { onDelete: "cascade" }),
   channel: deliveryChannelEnum("channel").notNull(),
   destination: text("destination"),
+  /** Lista de destinos (Business). Vazio = usa destination do perfil. */
+  destinations: jsonb("destinations").$type<string[]>().default([]).notNull(),
   isEnabled: boolean("is_enabled").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

@@ -2,8 +2,11 @@
 
 import { Mail, MessageCircle, Smartphone } from "lucide-react";
 
+import { PlanPageLink } from "@/components/billing/plan-page-link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
+import { canUseChannel } from "@/lib/billing/client-billing";
 import { formatBrazilPhone } from "@/lib/phone/format-brazil-phone";
 import { cn } from "@/lib/utils";
 import type { NewReminderValues } from "@/lib/validations/reminder";
@@ -12,6 +15,7 @@ type DeliveryChannelsFieldProps = {
   channels: NewReminderValues["channels"];
   userEmail?: string | null;
   userPhone?: string | null;
+  billing?: ClientBillingInfo;
   touched?: boolean;
   channelsError?: string;
   onWhatsappChange: (checked: boolean) => void;
@@ -41,34 +45,58 @@ export function DeliveryChannelsField({
   channels,
   userEmail,
   userPhone,
+  billing,
   touched,
   channelsError,
   onWhatsappChange,
   onSmsChange,
   onEmailChange,
 }: DeliveryChannelsFieldProps) {
+  const canWhatsapp = billing ? canUseChannel(billing, "whatsapp") : true;
+  const canSms = billing ? canUseChannel(billing, "sms") : true;
+  const canEmail = billing ? canUseChannel(billing, "email") : true;
+
   return (
     <div className="space-y-3">
       <Label className="text-sm font-medium">Onde enviar?</Label>
+      {!canSms && !canWhatsapp && billing && (
+        <p className="text-xs text-muted-foreground">
+          SMS e WhatsApp exigem plano Pro ou Business.{" "}
+          <PlanPageLink>Ver planos</PlanPageLink>
+        </p>
+      )}
       <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-zinc-50 p-3 dark:bg-muted/20">
         <div className="flex gap-3">
           <div
             className={cn(
               channelIconClass,
               "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+              !canWhatsapp && "opacity-50",
             )}
             aria-hidden
           >
             <MessageCircle className="size-4" />
           </div>
-          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+          <label
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-3",
+              canWhatsapp ? "cursor-pointer" : "cursor-not-allowed opacity-60",
+            )}
+          >
             <Checkbox
               checked={channels.whatsapp}
+              disabled={!canWhatsapp}
               onCheckedChange={(checked) => onWhatsappChange(Boolean(checked))}
             />
             <span className="text-sm">
               <span className="font-medium">WhatsApp</span>
-              <PhoneHint phone={userPhone} />
+              {!canWhatsapp ? (
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Plano Pro ou Business
+                </span>
+              ) : (
+                <PhoneHint phone={userPhone} />
+              )}
             </span>
           </label>
         </div>
@@ -78,19 +106,32 @@ export function DeliveryChannelsField({
             className={cn(
               channelIconClass,
               "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+              !canSms && "opacity-50",
             )}
             aria-hidden
           >
             <Smartphone className="size-4" />
           </div>
-          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+          <label
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-3",
+              canSms ? "cursor-pointer" : "cursor-not-allowed opacity-60",
+            )}
+          >
             <Checkbox
               checked={channels.sms}
+              disabled={!canSms}
               onCheckedChange={(checked) => onSmsChange(Boolean(checked))}
             />
             <span className="text-sm">
               <span className="font-medium">SMS</span>
-              <PhoneHint phone={userPhone} />
+              {!canSms ? (
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Plano Pro ou Business
+                </span>
+              ) : (
+                <PhoneHint phone={userPhone} />
+              )}
             </span>
           </label>
         </div>
@@ -100,14 +141,21 @@ export function DeliveryChannelsField({
             className={cn(
               channelIconClass,
               "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+              !canEmail && "opacity-50",
             )}
             aria-hidden
           >
             <Mail className="size-4" />
           </div>
-          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+          <label
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-3",
+              canEmail ? "cursor-pointer" : "cursor-not-allowed opacity-60",
+            )}
+          >
             <Checkbox
               checked={channels.email}
+              disabled={!canEmail}
               onCheckedChange={(checked) => onEmailChange(Boolean(checked))}
             />
             <span className="text-sm">

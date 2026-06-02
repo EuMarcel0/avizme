@@ -1,8 +1,19 @@
 import "server-only";
 
+import { buildChannelRows } from "@/lib/billing/build-channel-rows";
+import {
+  assertActiveReminderLimit,
+  assertChannelsAllowedForPlan,
+  assertRecipientListsAllowed,
+  assertScheduleModeAllowed,
+  BillingLimitError,
+  type RecipientLists,
+} from "@/lib/billing/enforce-limits";
+import { getUserBillingContext } from "@/lib/billing/get-user-billing";
 import { buildSchedulesFromForm, type ScheduleMode } from "@/lib/reminders/build-schedules";
 import { requireAuthenticatedUser } from "@/lib/reminders/require-auth";
 import { syncOccurrencesAfterSave } from "@/lib/reminders/sync-occurrences-after-save";
+import type { DeliveryChannel } from "@/lib/scheduling/types";
 import { createClient } from "@/lib/supabase/server";
 
 export type CreateReminderInput = {
@@ -19,6 +30,7 @@ export type CreateReminderInput = {
     whatsapp?: boolean;
     email?: boolean;
   };
+  recipientLists?: RecipientLists;
 };
 
 export class CreateReminderError extends Error {
@@ -42,8 +54,22 @@ export async function createReminder(
     throw new CreateReminderError("Não autenticado", 401);
   }
 
-  const { title, message, mode, selectedDates, times, intervalDays, weekdays, dayOfMonth, channels } =
+  const { title, message, mode, selectedDates, times, intervalDays, weekdays, dayOfMonth, channels, recipientLists } =
     input;
+
+  const billing = await getUserBillingContext(supabase, user.id);
+
+  try {
+    assertChannelsAllowedForPlan(billing, channels);
+    assertScheduleModeAllowed(billing, mode);
+    assertActiveReminderLimit(billing, true);
+    assertRecipientListsAllowed(billing, recipientLists);
+  } catch (error) {
+    if (error instanceof BillingLimitError) {
+      throw new CreateReminderError(error.message, 400);
+    }
+    throw error;
+  }
 
   if (!title?.trim() || !message?.trim()) {
     throw new CreateReminderError("Título e mensagem são obrigatórios", 400);
@@ -75,7 +101,7 @@ export async function createReminder(
       channels?.whatsapp && "whatsapp",
       channels?.email && "email",
     ] as const
-  ).filter(Boolean);
+  ).filter(Boolean) as DeliveryChannel[];
 
   if (enabledChannels.length === 0) {
     throw new CreateReminderError(
@@ -135,20 +161,13 @@ export async function createReminder(
     throw new CreateReminderError(schedulesError.message, 500);
   }
 
-  const channelRows = enabledChannels.map((channel) => {
-    let destination: string | null = null;
-    if (channel === "email") {
-      destination = profile?.email ?? user.email ?? null;
-    }
-    if (channel === "sms" || channel === "whatsapp") {
-      destination = profile?.phone ?? null;
-    }
-    return {
-      reminder_id: reminder.id,
-      channel,
-      destination,
-      is_enabled: true,
-    };
+  const channelRows = buildChannelRows({
+    reminderId: reminder.id,
+    enabledChannels,
+    billing,
+    profileEmail: profile?.email ?? user.email ?? null,
+    profilePhone: profile?.phone ?? null,
+    recipientLists,
   });
 
   const { error: channelsError } = await supabase

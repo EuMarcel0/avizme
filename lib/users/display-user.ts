@@ -1,7 +1,11 @@
+import type { PlanTier } from "@/lib/billing/plans";
+
 export type AppUser = {
   email: string;
   fullName?: string | null;
   avatarUrl?: string | null;
+  planTier?: PlanTier;
+  planLabel?: string;
 };
 
 export function getDisplayName(user: AppUser) {

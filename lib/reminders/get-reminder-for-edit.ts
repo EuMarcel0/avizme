@@ -1,11 +1,16 @@
 import "server-only";
 
+import { toClientBillingInfo } from "@/lib/billing/client-billing";
+import { getUserBillingContext } from "@/lib/billing/get-user-billing";
+import { clampScheduleModeForPlan } from "@/lib/billing/plans";
+import { isStripeConfigured } from "@/lib/billing/stripe-config";
 import { mapScheduleRowsToFormValues } from "@/lib/reminders/map-schedule-rows-to-form";
 import {
   requireAuthenticatedUser,
   requireReminderOwnedByUser,
   ReminderAuthError,
 } from "@/lib/reminders/require-auth";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 import type { NewReminderValues } from "@/lib/validations/reminder";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +30,7 @@ export type ReminderForEdit = {
   message: string;
   userEmail: string | null;
   userPhone: string | null;
+  billing: ClientBillingInfo;
   formValues: NewReminderValues;
 };
 
@@ -69,7 +75,9 @@ export async function getReminderForEdit(
       ),
       reminder_delivery_channels (
         channel,
-        is_enabled
+        is_enabled,
+        destination,
+        destinations
       )
     `,
     )
@@ -103,10 +111,34 @@ export async function getReminderForEdit(
     >[1],
   );
 
+  const channelRows = (reminder.reminder_delivery_channels ?? []) as Array<{
+    channel: string;
+    destinations?: string[] | null;
+    destination?: string | null;
+  }>;
+
+  const recipientLists = {
+    email: [] as string[],
+    sms: [] as string[],
+    whatsapp: [] as string[],
+  };
+
+  for (const row of channelRows) {
+    const list = (row.destinations ?? []).filter(Boolean);
+    if (list.length > 0 && row.channel in recipientLists) {
+      recipientLists[row.channel as keyof typeof recipientLists] = list;
+    }
+  }
+
+  const billingContext = await getUserBillingContext(supabase, user.id);
+  const billing = toClientBillingInfo(billingContext, isStripeConfigured());
+
   const formValues: NewReminderValues = {
     title: reminder.title,
     message: reminder.message,
     ...schedulePart,
+    mode: clampScheduleModeForPlan(billing.planTier, schedulePart.mode),
+    recipientLists,
   };
 
   return {
@@ -115,6 +147,7 @@ export async function getReminderForEdit(
     message: reminder.message,
     userEmail: profile?.email ?? user.email ?? null,
     userPhone: profile?.phone ?? null,
+    billing,
     formValues,
   };
 }

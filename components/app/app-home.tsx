@@ -11,11 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 type AppHomeProps = {
   displayName: string;
   userEmail?: string | null;
   userPhone?: string | null;
   hasReminders: boolean;
+  billing?: ClientBillingInfo;
 };
 
 export function AppHome({
@@ -23,6 +25,7 @@ export function AppHome({
   userEmail,
   userPhone,
   hasReminders,
+  billing,
 }: AppHomeProps) {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -40,6 +43,7 @@ export function AppHome({
           className="w-full shrink-0 sm:w-auto"
           userEmail={userEmail}
           userPhone={userPhone}
+          billing={billing}
         />
       </div>
 
@@ -57,6 +61,7 @@ export function AppHome({
               className="w-full sm:w-auto"
               userEmail={userEmail}
               userPhone={userPhone}
+              billing={billing}
             />
           </CardContent>
         </Card>

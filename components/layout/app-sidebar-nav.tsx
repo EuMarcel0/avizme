@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, History } from "lucide-react";
+import { Bell, CreditCard, History } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -20,6 +20,12 @@ const navItems = [
     href: "/app/historico",
     label: "Histórico",
     icon: History,
+    exact: false,
+  },
+  {
+    href: "/app/plano",
+    label: "Plano",
+    icon: CreditCard,
     exact: false,
   },
 ] as const;

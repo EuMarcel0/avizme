@@ -29,3 +29,13 @@ export const occurrenceStatusEnum = pgEnum("occurrence_status", [
   "failed",
   "skipped",
 ]);
+
+export const planTierEnum = pgEnum("plan_tier", ["free", "pro", "business"]);
+
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "none",
+  "active",
+  "past_due",
+  "canceled",
+  "trialing",
+]);

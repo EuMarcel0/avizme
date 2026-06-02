@@ -1,9 +1,12 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { CreditCard, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { ThemeMenuItem } from "@/components/theme/theme-toggle";
+
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -15,13 +18,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
+import type { PlanTier } from "@/lib/billing/plans";
 import type { AppUser } from "@/lib/users/display-user";
 import { getDisplayName, getUserInitials } from "@/lib/users/display-user";
+import { cn } from "@/lib/utils";
+
+function planBadgeClass(tier: PlanTier | undefined): string {
+  switch (tier) {
+    case "business":
+      return "border-primary/30 bg-primary/10 text-primary";
+    case "pro":
+      return "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300";
+    default:
+      return "border-border bg-muted/50 text-muted-foreground";
+  }
+}
 
 export function UserMenu({ user }: { user: AppUser }) {
   const router = useRouter();
   const supabase = createClient();
   const displayName = getDisplayName(user);
+  const planLabel = user.planLabel ?? "Free";
 
   async function handleSignOut() {
     const { error } = await supabase.auth.signOut();
@@ -55,8 +72,23 @@ export function UserMenu({ user }: { user: AppUser }) {
             <p className="truncate text-xs text-muted-foreground">
               {user.email}
             </p>
+            <Badge
+              variant="outline"
+              className={cn("mt-2 font-medium", planBadgeClass(user.planTier))}
+            >
+              Plano {planLabel}
+            </Badge>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => router.push("/app/plano")}
+        >
+          <CreditCard className="size-4" />
+          Plano e cobrança
+        </DropdownMenuItem>
+        <ThemeMenuItem />
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"

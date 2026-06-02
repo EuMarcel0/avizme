@@ -68,6 +68,14 @@ export const newReminderSchema = yup.object({
     .test("at-least-one", "Escolha pelo menos um canal de envio", (value) =>
       Boolean(value?.sms || value?.whatsapp || value?.email),
     ),
+  recipientLists: yup
+    .object({
+      email: yup.array().of(yup.string()),
+      sms: yup.array().of(yup.string()),
+      whatsapp: yup.array().of(yup.string()),
+    })
+    .optional()
+    .default(undefined),
 });
 
 export type NewReminderValues = yup.InferType<typeof newReminderSchema>;

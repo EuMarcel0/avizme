@@ -1,21 +1,28 @@
 "use client";
 
 import {
-  DEFAULT_REMINDER_FORM_VALUES,
+  defaultReminderFormValuesForBilling,
   ReminderForm,
 } from "@/components/reminders/reminder-form";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 
 type NewReminderFormProps = {
   userEmail?: string | null;
   userPhone?: string | null;
+  billing?: ClientBillingInfo;
 };
 
-export function NewReminderForm({ userEmail, userPhone }: NewReminderFormProps) {
+export function NewReminderForm({
+  userEmail,
+  userPhone,
+  billing,
+}: NewReminderFormProps) {
   return (
     <ReminderForm
-      initialValues={DEFAULT_REMINDER_FORM_VALUES}
+      initialValues={defaultReminderFormValuesForBilling(billing)}
       userEmail={userEmail}
       userPhone={userPhone}
+      billing={billing}
     />
   );
 }

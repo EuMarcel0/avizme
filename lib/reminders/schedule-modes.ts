@@ -72,23 +72,29 @@ export const WEEKDAY_LABELS = [
   { value: 6, short: "Sáb", label: "Sábado" },
 ] as const;
 
+export function calendarAllowsRangeSelection(mode: ScheduleMode): boolean {
+  return mode === "specific_dates";
+}
+
 export function calendarSelectionMode(
   mode: ScheduleMode,
 ): "single" | "range" {
-  if (mode === "specific_dates") return "range";
+  if (mode === "specific_dates") return "single";
   return "single";
 }
 
 export function calendarHint(mode: ScheduleMode): string {
   switch (mode) {
     case "single":
+      return "Toque no dia do lembrete.";
     case "same_day_multi":
-      return "Toque no dia ou use Período (o agendamento usa o primeiro dia).";
+      return "Toque no dia; defina vários horários abaixo.";
     case "specific_dates":
-      return "Use Dia ou Período acima; no período, toque início e depois o fim.";
+      return "Dia: toque em várias datas. Período: toque início e depois o fim.";
     case "interval":
+      return "Toque no dia de início da repetição.";
     case "interval_multi":
-      return "Toque no início ou use Período (usa o primeiro dia do intervalo).";
+      return "Toque no dia de início; vários horários a cada intervalo.";
     case "weekly":
       return "Opcional: escolha a data de início da rotina semanal.";
     case "monthly":

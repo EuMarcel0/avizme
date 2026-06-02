@@ -47,6 +47,12 @@ export const env = {
   twilioMessagingServiceSid: optional(process.env.TWILIO_MESSAGING_SERVICE_SID),
   /** Remetente WhatsApp Twilio (ex.: whatsapp:+14155238886 no sandbox). */
   twilioWhatsappFrom: optional(process.env.TWILIO_WHATSAPP_FROM),
+  /** Stripe — cobrança e assinaturas. */
+  stripeSecretKey: optional(process.env.STRIPE_SECRET_KEY),
+  stripeWebhookSecret: optional(process.env.STRIPE_WEBHOOK_SECRET),
+  stripePricePro: optional(process.env.STRIPE_PRICE_PRO),
+  stripePriceBusiness: optional(process.env.STRIPE_PRICE_BUSINESS),
+  appUrl: optional(process.env.NEXT_PUBLIC_APP_URL) ?? "http://localhost:3000",
 };
 
 export function getDatabaseUrl(): string {

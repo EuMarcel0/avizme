@@ -11,6 +11,7 @@ import { ReminderScheduleCalendar } from "@/components/reminders/reminder-schedu
 import { TimeSlotsEditor } from "@/components/reminders/time-slots-editor";
 import { Button } from "@/components/ui/button";
 import { DeliveryChannelsField } from "@/components/reminders/delivery-channels-field";
+import { parseLines, RecipientListsField } from "@/components/reminders/recipient-lists-field";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,7 @@ import {
 } from "@/app/actions/reminders";
 import { useModal } from "@/hooks/use-modal";
 import { invalidateRemindersQueries } from "@/lib/reminders/reminders-query-keys";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 import {
   buildSchedulesFromForm,
   describeScheduleSummary,
@@ -43,10 +45,30 @@ export const DEFAULT_REMINDER_FORM_VALUES: NewReminderValues = {
   dayOfMonth: 1,
   channels: {
     sms: false,
-    whatsapp: true,
+    whatsapp: false,
     email: true,
   },
+  recipientLists: {
+    email: [],
+    sms: [],
+    whatsapp: [],
+  },
 };
+
+export function defaultReminderFormValuesForBilling(
+  billing?: ClientBillingInfo,
+): NewReminderValues {
+  const base = { ...DEFAULT_REMINDER_FORM_VALUES };
+  if (!billing) return base;
+  return {
+    ...base,
+    channels: {
+      email: billing.limits.channels.includes("email"),
+      sms: false,
+      whatsapp: false,
+    },
+  };
+}
 
 function maxTimesForMode(mode: ScheduleMode): number {
   return mode === "single" || mode === "interval" ? 1 : 12;
@@ -61,6 +83,7 @@ type ReminderFormProps = {
   reminderId?: string;
   userEmail?: string | null;
   userPhone?: string | null;
+  billing?: ClientBillingInfo;
 };
 
 export function ReminderForm({
@@ -68,6 +91,7 @@ export function ReminderForm({
   reminderId,
   userEmail,
   userPhone,
+  billing,
 }: ReminderFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -96,6 +120,9 @@ export function ReminderForm({
           return;
         }
 
+        const normalizeList = (list?: (string | undefined)[]) =>
+          list?.filter((item): item is string => Boolean(item?.trim()));
+
         const payload = {
           title: values.title,
           message: values.message,
@@ -106,6 +133,13 @@ export function ReminderForm({
           weekdays: values.weekdays?.filter((d): d is number => d !== undefined),
           dayOfMonth: values.dayOfMonth ?? undefined,
           channels: values.channels,
+          recipientLists: billing?.limits.allowRecipientLists
+            ? {
+                email: normalizeList(values.recipientLists?.email),
+                sms: normalizeList(values.recipientLists?.sms),
+                whatsapp: normalizeList(values.recipientLists?.whatsapp),
+              }
+            : undefined,
         };
 
         const result = isEdit
@@ -199,6 +233,7 @@ export function ReminderForm({
               <ScheduleModePicker
                 value={values.mode}
                 onChange={handleModeChange}
+                allowedModes={billing?.limits.allowedScheduleModes}
               />
             </section>
 
@@ -349,6 +384,7 @@ export function ReminderForm({
                   channels={values.channels}
                   userEmail={userEmail}
                   userPhone={userPhone}
+                  billing={billing}
                   touched={Boolean(touched.channels)}
                   channelsError={
                     typeof errors.channels === "string"
@@ -365,6 +401,26 @@ export function ReminderForm({
                     setFieldValue("channels.email", checked)
                   }
                 />
+
+                {billing?.limits.allowRecipientLists && (
+                  <RecipientListsField
+                    channels={values.channels}
+                    recipientLists={
+                      values.recipientLists ?? {
+                        email: [],
+                        sms: [],
+                        whatsapp: [],
+                      }
+                    }
+                    maxPerChannel={billing.limits.maxRecipientsPerChannel}
+                    onChange={(channel, text) =>
+                      setFieldValue(
+                        `recipientLists.${channel}`,
+                        parseLines(text),
+                      )
+                    }
+                  />
+                )}
               </section>
             </div>
 
