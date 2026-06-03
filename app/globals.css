@@ -199,10 +199,16 @@
   height: 0.5rem;
   background: color-mix(in oklab, var(--primary) 35%, transparent);
   opacity: 1;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .auth-slides-swiper .swiper-pagination-bullet-active {
   background: var(--primary);
   transform: scale(1.15);
+}
+
+* {
+  scroll-behavior: smooth;
 }

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
+import { rootMetadata } from "@/lib/marketing/metadata";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,9 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Avizme — Lembretes por SMS, WhatsApp e e-mail",
-  description:
-    "Agende lembretes flexíveis e receba notificações do jeito que preferir.",
+  ...rootMetadata,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -45,7 +44,7 @@ export default function RootLayout({
     >
       <body
         suppressHydrationWarning
-        className="min-h-dvh flex flex-col font-sans"
+        className="h-dvh overflow-hidden font-sans"
       >
         <AppProviders>{children}</AppProviders>
       </body>

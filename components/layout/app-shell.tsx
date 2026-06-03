@@ -29,7 +29,7 @@ export function AppShell({
       <Suspense fallback={null}>
         <CheckoutReturnHandler />
       </Suspense>
-      <div className="flex h-dvh overflow-hidden bg-white dark:bg-zinc-950">
+      <div className="flex h-dvh min-h-0 overflow-hidden bg-white dark:bg-zinc-950">
         <AppSidebar />
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -41,11 +41,11 @@ export function AppShell({
             mobileNavOpen={mobileNavOpen}
             onMobileNavOpenChange={setMobileNavOpen}
           />
-        <main className="min-h-0 flex-1 overflow-y-auto bg-white p-4 md:p-6 dark:bg-zinc-950">
-          {children}
-        </main>
+          <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-white p-4 md:p-6 dark:bg-zinc-950">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
     </>
   );
 }
