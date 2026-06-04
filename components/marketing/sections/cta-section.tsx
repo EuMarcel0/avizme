@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export function CtaSection() {
   return (
-    <section className="border-t border-border/60 bg-gradient-to-r from-aviz-teal/15 via-aviz-mint/10 to-aviz-sage/15 py-16 dark:from-aviz-teal/25 dark:to-aviz-teal/10 sm:py-20">
+    <section className="border-t border-border/60 bg-gradient-to-r from-aviz-teal/15 via-aviz-mint/10 to-aviz-teal/15 py-16 sm:py-20">
       <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
         <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
           Pronto para o primeiro lembrete?

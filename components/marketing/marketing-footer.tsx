@@ -8,7 +8,7 @@ export function MarketingFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border bg-muted/30">
+    <footer className="mt-auto shrink-0 border-t border-border bg-muted/30">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:justify-between">
         <div className="max-w-sm space-y-3">
           <Link href="/" className="inline-block" aria-label="Avizme — início">
@@ -24,17 +24,17 @@ export function MarketingFooter() {
             <p className="font-medium text-foreground">Produto</p>
             <ul className="space-y-1 text-muted-foreground">
               <li>
-                <Link href="#recursos" className="hover:text-foreground">
+                <Link href="/#recursos" className="hover:text-foreground">
                   Recursos
                 </Link>
               </li>
               <li>
-                <Link href="#solucoes" className="hover:text-foreground">
+                <Link href="/#solucoes" className="hover:text-foreground">
                   Soluções
                 </Link>
               </li>
               <li>
-                <Link href="#planos" className="hover:text-foreground">
+                <Link href="/#planos" className="hover:text-foreground">
                   Planos
                 </Link>
               </li>

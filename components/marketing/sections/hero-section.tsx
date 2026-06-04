@@ -9,7 +9,7 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden border-b border-border/60">
       <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-aviz-cream/40 via-background to-background dark:from-aviz-teal/10"
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-aviz-teal/10 via-background to-background"
         aria-hidden
       />
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
@@ -23,9 +23,10 @@ export function HeroSection() {
           <p className="mt-6 text-lg text-muted-foreground sm:text-xl">
             {HERO.subtitle}
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mx-auto mt-10 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:items-center sm:justify-center">
             <Button
               size="lg"
+              className="w-full sm:w-auto"
               nativeButton={false}
               render={<Link href="/cadastro" {...authLinkNewTab} />}
             >
@@ -35,8 +36,9 @@ export function HeroSection() {
             <Button
               variant="outline"
               size="lg"
+              className="w-full sm:w-auto"
               nativeButton={false}
-              render={<Link href="#planos" />}
+              render={<Link href="/#planos" />}
             >
               {HERO.secondaryCta}
             </Button>

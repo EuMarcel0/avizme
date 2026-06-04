@@ -55,12 +55,12 @@
 }
 
 :root {
-  /* Paleta Avizme: #f7f0ba #e0dba4 #a9cba6 #7ebea3 #53a08e */
-  --aviz-cream: #f7f0ba;
-  --aviz-sand: #e0dba4;
-  --aviz-sage: #a9cba6;
-  --aviz-mint: #7ebea3;
+  /* Verde principal (igual ao dark) — light sem tons amarelados */
   --aviz-teal: #53a08e;
+  --aviz-mint: #7ebea3;
+  --aviz-sage: #7ebea3;
+  --aviz-sand: #9ad4be;
+  --aviz-cream: #e8f5f1;
 
   --background: #ffffff;
   --foreground: #18181b;
@@ -79,12 +79,12 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: #e4e4e7;
   --input: #ffffff;
-  --ring: var(--aviz-teal);
+  --ring: var(--aviz-mint);
   --chart-1: var(--aviz-teal);
   --chart-2: var(--aviz-mint);
-  --chart-3: var(--aviz-sage);
-  --chart-4: var(--aviz-sand);
-  --chart-5: var(--aviz-cream);
+  --chart-3: var(--aviz-teal);
+  --chart-4: var(--aviz-mint);
+  --chart-5: var(--aviz-teal);
   --radius: 0.25rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #18181b;

@@ -13,7 +13,7 @@ export function LandingPage() {
   return (
     <>
       <MarketingHeader />
-      <main>
+      <main className="flex-1">
         <HeroSection />
         <FeaturesSection />
         <HowItWorksSection />

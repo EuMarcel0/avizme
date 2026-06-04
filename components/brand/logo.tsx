@@ -35,7 +35,7 @@ export function Logo({
         alt="Avizme"
         width={dim.width}
         height={dim.height}
-        className={cn(dim.className, className)}
+        className={cn("object-contain", dim.className, className)}
         priority
       />
     );

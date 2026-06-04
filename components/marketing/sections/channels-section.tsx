@@ -17,7 +17,7 @@ export function ChannelsSection() {
           {CHANNELS.map((channel) => (
             <li
               key={channel.slug}
-              className="rounded-lg border border-border bg-gradient-to-b from-aviz-sage/20 to-card p-6 dark:from-aviz-teal/10"
+              className="rounded-lg border border-border bg-gradient-to-b from-aviz-teal/10 to-card p-6"
             >
               <h3 className="font-heading text-xl font-semibold">
                 {channel.name}

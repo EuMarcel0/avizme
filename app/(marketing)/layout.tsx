@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
     <div className="fixed inset-0 z-0 overflow-y-auto overscroll-y-contain bg-background">
-      {children}
+      <div className="flex min-h-full flex-col">{children}</div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { MarketingHeader } from "@/components/marketing/marketing-header";
 import { Button } from "@/components/ui/button";
 import type { SeoPage } from "@/lib/marketing/seo-pages";
 import { getSeoPage } from "@/lib/marketing/seo-pages";
+import { MARKETING_SOLUCOES_HREF } from "@/lib/marketing/nav";
 
 export function SeoPageTemplate({ page }: { page: SeoPage }) {
   const related = page.relatedSlugs
@@ -16,7 +17,7 @@ export function SeoPageTemplate({ page }: { page: SeoPage }) {
   return (
     <>
       <MarketingHeader />
-      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+      <main className="mx-auto flex-1 max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <nav className="mb-8 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
             <li>
@@ -26,7 +27,7 @@ export function SeoPageTemplate({ page }: { page: SeoPage }) {
             </li>
             <li aria-hidden>/</li>
             <li>
-              <Link href="/#solucoes" className="hover:text-foreground">
+              <Link href={MARKETING_SOLUCOES_HREF} className="hover:text-foreground">
                 Soluções
               </Link>
             </li>
@@ -55,9 +56,9 @@ export function SeoPageTemplate({ page }: { page: SeoPage }) {
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href="/" />}
+              render={<Link href={MARKETING_SOLUCOES_HREF} />}
             >
-              Voltar à página inicial
+              Voltar às soluções
             </Button>
           </div>
         </article>

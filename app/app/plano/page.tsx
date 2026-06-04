@@ -6,6 +6,7 @@ import { persistUsageCountersFromOccurrences } from "@/lib/billing/persist-usage
 import { syncActiveSubscriptionForUser } from "@/lib/billing/sync-active-subscription";
 import { getAuthenticatedUserBillingContext } from "@/lib/billing/get-user-billing";
 import { isStripeCheckoutConfigured, stripeSetupHint } from "@/lib/billing/stripe-config";
+import { env } from "@/lib/env";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -25,12 +26,29 @@ export default async function PlanoPage() {
 
   let periodFieldsFromStripe = null;
 
-  if (profile?.stripe_customer_id) {
-    const syncResult = await syncActiveSubscriptionForUser(user.id);
-    periodFieldsFromStripe = syncResult.periodFields ?? null;
+  if (
+    profile?.stripe_customer_id &&
+    isStripeCheckoutConfigured() &&
+    env.supabaseServiceRoleKey
+  ) {
+    try {
+      const syncResult = await syncActiveSubscriptionForUser(user.id);
+      periodFieldsFromStripe = syncResult.periodFields ?? null;
+    } catch (error) {
+      console.error("[plano:stripe-sync]", error);
+    }
   }
 
-  await persistUsageCountersFromOccurrences(createServiceClient(), user.id);
+  if (env.supabaseServiceRoleKey) {
+    try {
+      await persistUsageCountersFromOccurrences(
+        createServiceClient(),
+        user.id,
+      );
+    } catch (error) {
+      console.error("[plano:persist-usage]", error);
+    }
+  }
 
   const billing = await getAuthenticatedUserBillingContext();
   if (!billing) redirect("/login");
