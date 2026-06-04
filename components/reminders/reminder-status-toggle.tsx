@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Pause, Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { toggleReminderStatusAction } from "@/app/actions/reminders";
+import { ButtonLabelSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -119,10 +120,7 @@ export function ReminderStatusToggle({
               disabled={loading}
             >
               {loading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Aguarde…
-                </>
+                <ButtonLabelSkeleton className="w-16" />
               ) : (
                 copy.confirmLabel
               )}

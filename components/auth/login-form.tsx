@@ -1,12 +1,12 @@
 "use client";
 
 import { Form, Formik } from "formik";
-import { Loader2 } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { ButtonLabelSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/ui/form-field";
@@ -24,18 +24,6 @@ const initialValues: LoginValues = {
 export function LoginForm() {
   const router = useRouter();
   const supabase = createClient();
-
-  async function handleGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-    if (error) {
-      toast.error(error.message);
-    }
-  }
 
   return (
     <Card className="border-border/80 bg-white shadow-sm dark:border-border dark:bg-card">
@@ -108,10 +96,7 @@ export function LoginForm() {
               </FormField>
               <Button type='submit' className='w-full' disabled={isSubmitting}>
                 {isSubmitting ? (
-                  <>
-                    <Loader2 className='animate-spin' />
-                    Entrando…
-                  </>
+                  <ButtonLabelSkeleton className="w-20" />
                 ) : (
                   "Entrar"
                 )}
@@ -122,15 +107,7 @@ export function LoginForm() {
                   ou
                 </span>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full gap-2 border-border/80 bg-white hover:bg-zinc-50 dark:bg-background dark:hover:bg-muted"
-                onClick={handleGoogle}
-              >
-                <FcGoogle className="size-5 shrink-0" aria-hidden />
-                Continuar com Google
-              </Button>
+              <GoogleSignInButton />
             </CardContent>
             <CardFooter className='mt-8 justify-center border-t border-border/60 bg-white py-5 text-sm text-muted-foreground dark:bg-muted/50'>
               Não tem conta?{" "}

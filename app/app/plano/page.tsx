@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
 import { PlansView } from "@/components/billing/plans-view";
+import { PlansViewSkeleton } from "@/components/skeletons";
 import { toClientBillingInfo } from "@/lib/billing/client-billing";
 import { persistUsageCountersFromOccurrences } from "@/lib/billing/persist-usage-counters";
 import { syncActiveSubscriptionForUser } from "@/lib/billing/sync-active-subscription";
@@ -61,7 +62,7 @@ export default async function PlanoPage() {
   const setupHint = stripeSetupHint();
 
   return (
-    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Carregando…</div>}>
+    <Suspense fallback={<PlansViewSkeleton />}>
       <PlansView billing={clientBilling} setupHint={setupHint} />
     </Suspense>
   );

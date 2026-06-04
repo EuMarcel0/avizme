@@ -29,7 +29,6 @@ export function EditReminderButton({
     setLoading(true);
     openModal({
       title: "Editar lembrete",
-      description: "Carregando dados do lembrete…",
       className: "w-[min(96vw,56rem)] max-w-[min(96vw,56rem)]",
       preventClose: true,
       content: <ReminderFormSkeleton />,

@@ -1,6 +1,7 @@
 "use client";
 
 import { Logo } from "@/components/brand/logo";
+import { Skeleton } from "@/components/skeletons/skeleton";
 import { cn } from "@/lib/utils";
 
 type SplashLoadingFakeProps = {
@@ -21,7 +22,10 @@ export function SplashLoadingFake({ className }: SplashLoadingFakeProps) {
       )}
     >
       <Logo variant="logotipo" size="lg" />
-      <p className="text-sm text-muted-foreground">Aguarde...</p>
+      <div className="flex flex-col items-center gap-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-3 w-24" />
+      </div>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { Form, Formik } from "formik";
-import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -9,6 +8,7 @@ import { toast } from "sonner";
 import { ScheduleModePicker } from "@/components/reminders/schedule-mode-picker";
 import { ReminderScheduleCalendar } from "@/components/reminders/reminder-schedule-calendar";
 import { TimeSlotsEditor } from "@/components/reminders/time-slots-editor";
+import { ButtonLabelSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { DeliveryChannelsField } from "@/components/reminders/delivery-channels-field";
 import { parseLines, RecipientListsField } from "@/components/reminders/recipient-lists-field";
@@ -442,10 +442,7 @@ export function ReminderForm({
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Salvando…
-                    </>
+                    <ButtonLabelSkeleton className="w-28" />
                   ) : (
                     isEdit ? "Salvar alterações" : "Criar lembrete"
                   )}

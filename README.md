@@ -59,10 +59,22 @@ Se a senha do Postgres tiver `@`, codifique na connection string (`@` → `%40`)
 ## Auth
 
 - `/login` — e-mail/senha + Google OAuth
-- `/cadastro` — cadastro básico
+- `/cadastro` — cadastro básico + Google OAuth
+- `/auth/callback` — retorno do Google (Supabase)
 - `/app` — área autenticada
 
-No Supabase Dashboard, habilite o provedor **Google** em Authentication → Providers e configure a URL de redirect: `http://localhost:3000/auth/callback`.
+### Login com Google
+
+O código já está pronto. Configure **Google Cloud** + **Supabase** (as chaves do Google **não** vão no `.env` do Next.js).
+
+Passo a passo completo: **[docs/google-oauth.md](docs/google-oauth.md)**
+
+Resumo:
+
+1. **Google Cloud** → Credenciais OAuth (Web) → redirect: `https://SEU-PROJECT-REF.supabase.co/auth/v1/callback`
+2. **Supabase** → Authentication → Providers → Google (Client ID + Secret)
+3. **Supabase** → URL Configuration → Redirect URLs: `http://localhost:3000/auth/callback` (e o domínio de produção)
+4. **`.env`** → `NEXT_PUBLIC_APP_URL` com a URL pública do app
 
 ## Paleta de cores
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Loader2 } from "lucide-react";
+
+import { RemindersGridSkeleton } from "@/components/skeletons";
 
 type RemindersInfiniteSentinelProps = {
   onVisible: () => void;
@@ -36,11 +37,13 @@ export function RemindersInfiniteSentinel({
   return (
     <div
       ref={ref}
-      className="flex justify-center py-6"
+      className="w-full py-2"
       aria-hidden={!hasMore && !isLoading}
+      aria-busy={isLoading}
+      aria-label={isLoading ? "Carregando mais lembretes" : undefined}
     >
       {isLoading ? (
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        <RemindersGridSkeleton count={3} />
       ) : (
         <span className="sr-only">Carregar mais</span>
       )}

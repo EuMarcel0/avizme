@@ -1,12 +1,12 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { createCheckoutSessionAction } from "@/app/actions/billing";
+import { ButtonLabelSkeleton } from "@/components/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -153,10 +153,7 @@ export function PlansView({ billing, setupHint }: PlansViewProps) {
                   onClick={() => handleUpgrade(tier)}
                 >
                   {loadingPlan === tier ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Redirecionando…
-                    </>
+                    <ButtonLabelSkeleton className="w-32" />
                   ) : billing.stripeEnabled ? (
                     `Assinar ${PLAN_LIMITS[tier].label}`
                   ) : (

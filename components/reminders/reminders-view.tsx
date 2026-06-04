@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Filter, LayoutGrid, List, Loader2 } from "lucide-react";
+import { Filter, LayoutGrid, List } from "lucide-react";
 import { toast } from "sonner";
 
 import { ReminderCard } from "@/components/reminders/reminder-card";
-import { RemindersGridSkeleton } from "@/components/skeletons";
+import { RemindersGridSkeleton, RemindersListSkeleton } from "@/components/skeletons";
 import { RemindersFilters } from "@/components/reminders/reminders-filters";
 import { RemindersInfiniteSentinel } from "@/components/reminders/reminders-infinite-sentinel";
 import { RemindersListPagination } from "@/components/reminders/reminders-list-pagination";
@@ -383,7 +383,7 @@ export function RemindersView({
       </div>
 
       {isLoadingData ? (
-        <RemindersGridSkeleton />
+        <RemindersGridSkeleton count={6} />
       ) : isEmpty ? (
         <div className="rounded-lg border border-dashed border-border/80 bg-muted/10 px-6 py-12 text-center">
           <p className="text-sm font-medium text-foreground">{emptyTitle}</p>
@@ -429,9 +429,7 @@ export function RemindersView({
       )}
 
       {activeQuery.isFetching && !isLoadingData && showList ? (
-        <div className="flex justify-center py-2">
-          <Loader2 className="size-5 animate-spin text-muted-foreground" />
-        </div>
+        <RemindersListSkeleton rows={3} />
       ) : null}
     </div>
   );
