@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import { useState } from "react";
 
 import { authLinkNewTab } from "@/components/marketing/auth-link-props";
+import { useMarketingAuth } from "@/components/marketing/marketing-auth-context";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { MARKETING_NAV } from "@/lib/marketing/nav";
 
 export function MarketingHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isAuthenticated = useMarketingAuth();
 
   return (
     <header className="sticky top-0 z-50 shrink-0 border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -44,23 +46,36 @@ export function MarketingHeader() {
 
         <div className="flex items-center gap-1 sm:gap-2">
           <ThemeToggle className="hidden sm:inline-flex" />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden md:inline-flex"
-            nativeButton={false}
-            render={<Link href="/login" {...authLinkNewTab} />}
-          >
-            Entrar
-          </Button>
-          <Button
-            size="sm"
-            className="hidden md:inline-flex"
-            nativeButton={false}
-            render={<Link href="/cadastro" {...authLinkNewTab} />}
-          >
-            Começar grátis
-          </Button>
+          {isAuthenticated ? (
+            <Button
+              size="sm"
+              className="hidden md:inline-flex"
+              nativeButton={false}
+              render={<Link href="/app" />}
+            >
+              Abrir painel
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden md:inline-flex"
+                nativeButton={false}
+                render={<Link href="/login" {...authLinkNewTab} />}
+              >
+                Entrar
+              </Button>
+              <Button
+                size="sm"
+                className="hidden md:inline-flex"
+                nativeButton={false}
+                render={<Link href="/cadastro" {...authLinkNewTab} />}
+              >
+                Começar grátis
+              </Button>
+            </>
+          )}
 
           <ThemeToggle className="md:hidden" />
 
@@ -112,21 +127,35 @@ export function MarketingHeader() {
                 ))}
               </nav>
               <div className="mt-auto flex flex-col gap-2 border-t border-border p-4">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  nativeButton={false}
-                  render={<Link href="/login" {...authLinkNewTab} />}
-                >
-                  Entrar
-                </Button>
-                <Button
-                  className="w-full"
-                  nativeButton={false}
-                  render={<Link href="/cadastro" {...authLinkNewTab} />}
-                >
-                  Começar grátis
-                </Button>
+                {isAuthenticated ? (
+                  <Button
+                    className="w-full"
+                    nativeButton={false}
+                    render={
+                      <Link href="/app" onClick={() => setMobileOpen(false)} />
+                    }
+                  >
+                    Abrir painel
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      nativeButton={false}
+                      render={<Link href="/login" {...authLinkNewTab} />}
+                    >
+                      Entrar
+                    </Button>
+                    <Button
+                      className="w-full"
+                      nativeButton={false}
+                      render={<Link href="/cadastro" {...authLinkNewTab} />}
+                    >
+                      Começar grátis
+                    </Button>
+                  </>
+                )}
               </div>
             </SheetContent>
           </Sheet>
