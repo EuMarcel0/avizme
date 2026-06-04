@@ -24,6 +24,7 @@ import { CalendarClock } from "lucide-react";
 type PlansViewProps = {
   billing: ClientBillingInfo;
   setupHint?: string | null;
+  webhookHint?: string | null;
 };
 
 const PAID_PLANS: Array<{
@@ -34,7 +35,7 @@ const PAID_PLANS: Array<{
   { tier: "business", highlight: true },
 ];
 
-export function PlansView({ billing, setupHint }: PlansViewProps) {
+export function PlansView({ billing, setupHint, webhookHint }: PlansViewProps) {
   const searchParams = useSearchParams();
   const [loadingPlan, setLoadingPlan] = useState<PlanTier | null>(null);
 
@@ -166,24 +167,21 @@ export function PlansView({ billing, setupHint }: PlansViewProps) {
         ))}
       </div>
 
-      {!billing.stripeEnabled && setupHint && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+      {setupHint ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
           {setupHint}
+          <p className="mt-2 text-xs opacity-90">
+            Após alterar o .env, reinicie o servidor (<code className="font-mono">pnpm dev</code>
+            ). Em produção, configure as variáveis na Vercel e faça redeploy.
+          </p>
         </div>
-      )}
+      ) : null}
 
-      {!billing.stripeEnabled && !setupHint && (
-        <p className="text-xs text-muted-foreground">
-          Configure STRIPE_SECRET_KEY, STRIPE_PRICE_PRO (price_...) e
-          STRIPE_PRICE_BUSINESS (price_...) no .env e reinicie o servidor.
-        </p>
-      )}
-
-      {billing.stripeEnabled && setupHint && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          {setupHint}
+      {webhookHint ? (
+        <div className="rounded-lg border border-border/80 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          {webhookHint}
         </div>
-      )}
+      ) : null}
 
       <p className="text-xs text-muted-foreground">
         Pagamentos processados via Stripe. Dúvidas?{" "}

@@ -32,20 +32,41 @@ export function isStripeConfigured(): boolean {
   return Boolean(isStripeCheckoutConfigured() && env.stripeWebhookSecret);
 }
 
-export function stripeSetupHint(): string | null {
-  if (!env.stripeSecretKey) {
-    return "Adicione STRIPE_SECRET_KEY (sk_test_...) no .env";
+function stripePriceHint(
+  name: "STRIPE_PRICE_PRO" | "STRIPE_PRICE_BUSINESS",
+  value: string | undefined,
+): string | null {
+  if (!value) {
+    return `${name} não está definida no ambiente (.env local ou variáveis da Vercel). Use um Price ID (price_...).`;
   }
-  if (!env.stripePricePro?.startsWith("price_")) {
-    return "STRIPE_PRICE_PRO deve ser um Price ID (price_...), não Product ID (prod_...)";
-  }
-  if (!env.stripePriceBusiness?.startsWith("price_")) {
-    return "STRIPE_PRICE_BUSINESS deve ser um Price ID (price_...), não Product ID (prod_...)";
-  }
-  if (!env.stripeWebhookSecret) {
-    return "Rode stripe listen e adicione STRIPE_WEBHOOK_SECRET (whsec_...) para sincronizar o plano após pagamento";
+  if (!value.startsWith("price_")) {
+    const kind = value.startsWith("prod_") ? "Product ID (prod_...)" : "valor inválido";
+    return `${name} deve ser um Price ID (price_...), não ${kind}. Valor atual: ${value.slice(0, 20)}…`;
   }
   return null;
+}
+
+/** Bloqueia checkout — preços ou secret ausentes/inválidos. */
+export function stripeSetupHint(): string | null {
+  if (!env.stripeSecretKey) {
+    return "Adicione STRIPE_SECRET_KEY (sk_test_...) no .env ou na Vercel.";
+  }
+  const proHint = stripePriceHint("STRIPE_PRICE_PRO", env.stripePricePro);
+  if (proHint) return proHint;
+  const businessHint = stripePriceHint(
+    "STRIPE_PRICE_BUSINESS",
+    env.stripePriceBusiness,
+  );
+  if (businessHint) return businessHint;
+  return null;
+}
+
+/** Opcional — checkout funciona; webhook melhora sync automático do plano. */
+export function stripeWebhookHint(): string | null {
+  if (!isStripeCheckoutConfigured() || env.stripeWebhookSecret) {
+    return null;
+  }
+  return "Para atualizar o plano automaticamente após pagamento, configure o webhook do Stripe em produção (veja docs/stripe-webhook.md) e adicione STRIPE_WEBHOOK_SECRET na Vercel.";
 }
 
 export function planTierFromPriceId(priceId: string): PlanTier | null {

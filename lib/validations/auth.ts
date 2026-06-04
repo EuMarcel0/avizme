@@ -24,9 +24,9 @@ export const registerSchema = yup.object({
   phone: yup
     .string()
     .trim()
-    .test("phone", "Telefone inválido", (value) => {
-      if (!value) return true;
-      const digits = value.replace(/\D/g, "");
+    .required("Telefone é obrigatório")
+    .test("phone", "Informe um telefone válido com DDD (10 ou 11 dígitos)", (value) => {
+      const digits = (value ?? "").replace(/\D/g, "");
       return digits.length === 10 || digits.length === 11;
     }),
   password: yup

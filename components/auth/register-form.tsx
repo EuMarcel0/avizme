@@ -121,7 +121,7 @@ export function RegisterForm() {
               </FormField>
               <FormField
                 id="phone"
-                label="Telefone (opcional)"
+                label="Telefone"
                 error={errors.phone}
                 showError={!!(touched.phone && errors.phone)}
               >

@@ -6,7 +6,11 @@ import { toClientBillingInfo } from "@/lib/billing/client-billing";
 import { persistUsageCountersFromOccurrences } from "@/lib/billing/persist-usage-counters";
 import { syncActiveSubscriptionForUser } from "@/lib/billing/sync-active-subscription";
 import { getAuthenticatedUserBillingContext } from "@/lib/billing/get-user-billing";
-import { isStripeCheckoutConfigured, stripeSetupHint } from "@/lib/billing/stripe-config";
+import {
+  isStripeCheckoutConfigured,
+  stripeSetupHint,
+  stripeWebhookHint,
+} from "@/lib/billing/stripe-config";
 import { env } from "@/lib/env";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
@@ -60,10 +64,15 @@ export default async function PlanoPage() {
     periodFieldsFromStripe,
   );
   const setupHint = stripeSetupHint();
+  const webhookHint = stripeWebhookHint();
 
   return (
     <Suspense fallback={<PlansViewSkeleton />}>
-      <PlansView billing={clientBilling} setupHint={setupHint} />
+      <PlansView
+        billing={clientBilling}
+        setupHint={setupHint}
+        webhookHint={webhookHint}
+      />
     </Suspense>
   );
 }
