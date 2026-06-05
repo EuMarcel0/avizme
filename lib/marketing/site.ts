@@ -48,3 +48,19 @@ export const SITE_OG_IMAGE = `${SITE_URL}/images/LOGOTIPO.png`;
 export const SITE_LOCALE = "pt_BR";
 
 export const SITE_TWITTER_HANDLE = "@avizme";
+
+export const WHATSAPP_E164 = "+5577991776299";
+
+export const WHATSAPP_DISPLAY = "+55 77 99177-6299";
+
+const WHATSAPP_DEFAULT_MESSAGE =
+  "Olá! Gostaria de saber mais sobre o Avizme.";
+
+export function getWhatsAppUrl(
+  message: string = WHATSAPP_DEFAULT_MESSAGE,
+): string {
+  const phone = WHATSAPP_E164.replace(/\D/g, "");
+  const base = `https://wa.me/${phone}`;
+  if (!message.trim()) return base;
+  return `${base}?text=${encodeURIComponent(message.trim())}`;
+}

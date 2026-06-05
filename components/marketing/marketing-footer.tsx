@@ -1,8 +1,13 @@
 import Link from "next/link";
 
 import { authLinkNewTab } from "@/components/marketing/auth-link-props";
+import { WhatsAppIcon } from "@/components/marketing/whatsapp-icon";
 import { Logo } from "@/components/brand/logo";
-import { SITE_NAME } from "@/lib/marketing/site";
+import {
+  getWhatsAppUrl,
+  SITE_NAME,
+  WHATSAPP_DISPLAY,
+} from "@/lib/marketing/site";
 
 export function MarketingFooter() {
   const year = new Date().getFullYear();
@@ -65,6 +70,25 @@ export function MarketingFooter() {
                 <Link href="/app" className="hover:text-foreground">
                   Painel
                 </Link>
+              </li>
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <p className="font-medium text-foreground">Contato</p>
+            <ul className="space-y-1 text-muted-foreground">
+              <li>
+                <a
+                  href={getWhatsAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 hover:text-foreground"
+                >
+                  <WhatsAppIcon className="size-4 shrink-0 text-[#25D366]" />
+                  <span>
+                    WhatsApp
+                    <span className="mt-0.5 block text-xs">{WHATSAPP_DISPLAY}</span>
+                  </span>
+                </a>
               </li>
             </ul>
           </div>
