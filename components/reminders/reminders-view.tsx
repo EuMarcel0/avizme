@@ -292,13 +292,14 @@ export function RemindersView({
 
   const displayedItems = showList ? listItems : gridItems;
 
-  const isLoadingData = showList
-    ? listQuery.isPending ||
-      (listQuery.isFetching && displayedItems.length === 0)
-    : infiniteQuery.isPending ||
-      (infiniteQuery.isFetching && displayedItems.length === 0);
+  /** Só sem dados ainda — refetch em background não mostra skeleton. */
+  const isListContentLoading = showList && listQuery.isLoading;
+  const isGridContentLoading = showGrid && infiniteQuery.isLoading;
 
-  const isEmpty = !isLoadingData && displayedItems.length === 0;
+  const isEmpty =
+    !isListContentLoading &&
+    !isGridContentLoading &&
+    displayedItems.length === 0;
 
   return (
     <div className="flex flex-col gap-4">
@@ -382,54 +383,56 @@ export function RemindersView({
         <RemindersViewToggle view={view} onViewChange={setView} />
       </div>
 
-      {isLoadingData ? (
+      {showGrid && isGridContentLoading ? (
         <RemindersGridSkeleton count={6} />
-      ) : isEmpty ? (
+      ) : null}
+
+      {showList && isListContentLoading ? (
+        <div className="hidden md:block">
+          <RemindersListSkeleton rows={5} />
+        </div>
+      ) : null}
+
+      {isEmpty ? (
         <div className="rounded-lg border border-dashed border-border/80 bg-muted/10 px-6 py-12 text-center">
           <p className="text-sm font-medium text-foreground">{emptyTitle}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             {emptyDescription}
           </p>
         </div>
-      ) : (
-        <>
-          {showGrid ? (
-            <div
-              className={cn(
-                "grid gap-4 sm:grid-cols-2 xl:grid-cols-3",
-                showList && "md:hidden",
-              )}
-            >
-              {gridItems.map((reminder) => (
-                <ReminderCard key={reminder.id} reminder={reminder} />
-              ))}
-            </div>
-          ) : null}
+      ) : null}
 
-          {showList ? (
-            <div className="hidden md:block">
-              <RemindersTable reminders={listItems} />
-              <RemindersListPagination
-                page={listPage}
-                pageSize={REMINDERS_PAGE_SIZE_LIST}
-                total={total}
-                onPageChange={setListPage}
-              />
-            </div>
-          ) : null}
+      {showGrid && !isGridContentLoading && gridItems.length > 0 ? (
+        <div
+          className={cn(
+            "grid gap-4 sm:grid-cols-2 xl:grid-cols-3",
+            showList && "md:hidden",
+          )}
+        >
+          {gridItems.map((reminder) => (
+            <ReminderCard key={reminder.id} reminder={reminder} />
+          ))}
+        </div>
+      ) : null}
 
-          {showGrid ? (
-            <RemindersInfiniteSentinel
-              hasMore={Boolean(infiniteQuery.hasNextPage)}
-              isLoading={infiniteQuery.isFetchingNextPage}
-              onVisible={loadMore}
-            />
-          ) : null}
-        </>
-      )}
+      {showList && !isListContentLoading && listItems.length > 0 ? (
+        <div className="hidden md:block">
+          <RemindersTable reminders={listItems} />
+          <RemindersListPagination
+            page={listPage}
+            pageSize={REMINDERS_PAGE_SIZE_LIST}
+            total={total}
+            onPageChange={setListPage}
+          />
+        </div>
+      ) : null}
 
-      {activeQuery.isFetching && !isLoadingData && showList ? (
-        <RemindersListSkeleton rows={3} />
+      {showGrid && !isGridContentLoading ? (
+        <RemindersInfiniteSentinel
+          hasMore={Boolean(infiniteQuery.hasNextPage)}
+          isLoading={infiniteQuery.isFetchingNextPage}
+          onVisible={loadMore}
+        />
       ) : null}
     </div>
   );

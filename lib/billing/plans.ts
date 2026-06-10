@@ -51,14 +51,14 @@ export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
   },
   pro: {
     label: "Pro",
-    description: "SMS e WhatsApp para o seu número cadastrado.",
+    description: "SMS, WhatsApp e destinatários por lembrete.",
     channels: ["email", "sms", "whatsapp"],
     emailsPerDay: null,
     smsPerMonth: 100,
     whatsappPerMonth: 50,
     maxActiveReminders: 50,
-    allowRecipientLists: false,
-    maxRecipientsPerChannel: 1,
+    allowRecipientLists: true,
+    maxRecipientsPerChannel: 20,
     allowedScheduleModes: ALL_SCHEDULE_MODES,
   },
   business: {

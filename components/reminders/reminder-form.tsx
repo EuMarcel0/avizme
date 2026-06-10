@@ -11,7 +11,6 @@ import { TimeSlotsEditor } from "@/components/reminders/time-slots-editor";
 import { ButtonLabelSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { DeliveryChannelsField } from "@/components/reminders/delivery-channels-field";
-import { parseLines, RecipientListsField } from "@/components/reminders/recipient-lists-field";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -382,6 +381,13 @@ export function ReminderForm({
 
                 <DeliveryChannelsField
                   channels={values.channels}
+                  recipientLists={
+                    values.recipientLists ?? {
+                      email: [],
+                      sms: [],
+                      whatsapp: [],
+                    }
+                  }
                   userEmail={userEmail}
                   userPhone={userPhone}
                   billing={billing}
@@ -400,27 +406,10 @@ export function ReminderForm({
                   onEmailChange={(checked) =>
                     setFieldValue("channels.email", checked)
                   }
+                  onRecipientListChange={(channel, recipients) =>
+                    setFieldValue(`recipientLists.${channel}`, recipients)
+                  }
                 />
-
-                {billing?.limits.allowRecipientLists && (
-                  <RecipientListsField
-                    channels={values.channels}
-                    recipientLists={
-                      values.recipientLists ?? {
-                        email: [],
-                        sms: [],
-                        whatsapp: [],
-                      }
-                    }
-                    maxPerChannel={billing.limits.maxRecipientsPerChannel}
-                    onChange={(channel, text) =>
-                      setFieldValue(
-                        `recipientLists.${channel}`,
-                        parseLines(text),
-                      )
-                    }
-                  />
-                )}
               </section>
             </div>
 

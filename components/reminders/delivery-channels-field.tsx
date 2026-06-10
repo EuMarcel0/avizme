@@ -2,6 +2,7 @@
 
 import { Mail, MessageCircle, Smartphone } from "lucide-react";
 
+import { ChannelRecipientsEditor } from "@/components/reminders/channel-recipients-editor";
 import { PlanPageLink } from "@/components/billing/plan-page-link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -11,8 +12,11 @@ import { formatBrazilPhone } from "@/lib/phone/format-brazil-phone";
 import { cn } from "@/lib/utils";
 import type { NewReminderValues } from "@/lib/validations/reminder";
 
+type RecipientChannel = keyof NonNullable<NewReminderValues["recipientLists"]>;
+
 type DeliveryChannelsFieldProps = {
   channels: NewReminderValues["channels"];
+  recipientLists: NonNullable<NewReminderValues["recipientLists"]>;
   userEmail?: string | null;
   userPhone?: string | null;
   billing?: ClientBillingInfo;
@@ -21,6 +25,7 @@ type DeliveryChannelsFieldProps = {
   onWhatsappChange: (checked: boolean) => void;
   onSmsChange: (checked: boolean) => void;
   onEmailChange: (checked: boolean) => void;
+  onRecipientListChange: (channel: RecipientChannel, recipients: string[]) => void;
 };
 
 const channelIconClass =
@@ -43,6 +48,7 @@ function PhoneHint({ phone }: { phone?: string | null }) {
 
 export function DeliveryChannelsField({
   channels,
+  recipientLists,
   userEmail,
   userPhone,
   billing,
@@ -51,10 +57,13 @@ export function DeliveryChannelsField({
   onWhatsappChange,
   onSmsChange,
   onEmailChange,
+  onRecipientListChange,
 }: DeliveryChannelsFieldProps) {
   const canWhatsapp = billing ? canUseChannel(billing, "whatsapp") : true;
   const canSms = billing ? canUseChannel(billing, "sms") : true;
   const canEmail = billing ? canUseChannel(billing, "email") : true;
+  const allowRecipientLists = billing?.limits.allowRecipientLists ?? false;
+  const maxRecipients = billing?.limits.maxRecipientsPerChannel ?? 1;
 
   return (
     <div className="space-y-3">
@@ -65,106 +74,149 @@ export function DeliveryChannelsField({
           <PlanPageLink>Ver planos</PlanPageLink>
         </p>
       )}
-      <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-zinc-50 p-3 dark:bg-muted/20">
-        <div className="flex gap-3">
-          <div
-            className={cn(
-              channelIconClass,
-              "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-              !canWhatsapp && "opacity-50",
-            )}
-            aria-hidden
-          >
-            <MessageCircle className="size-4" />
-          </div>
-          <label
-            className={cn(
-              "flex min-w-0 flex-1 items-center gap-3",
-              canWhatsapp ? "cursor-pointer" : "cursor-not-allowed opacity-60",
-            )}
-          >
-            <Checkbox
-              checked={channels.whatsapp}
-              disabled={!canWhatsapp}
-              onCheckedChange={(checked) => onWhatsappChange(Boolean(checked))}
-            />
-            <span className="text-sm">
-              <span className="font-medium">WhatsApp</span>
-              {!canWhatsapp ? (
-                <span className="mt-0.5 block text-xs text-muted-foreground">
-                  Plano Pro ou Business
-                </span>
-              ) : (
-                <PhoneHint phone={userPhone} />
+      <div className="flex flex-col gap-4 rounded-lg border border-border/70 bg-zinc-50 p-3 dark:bg-muted/20">
+        <div className="space-y-2">
+          <div className="flex gap-3">
+            <div
+              className={cn(
+                channelIconClass,
+                "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                !canWhatsapp && "opacity-50",
               )}
-            </span>
-          </label>
-        </div>
-
-        <div className="flex gap-3">
-          <div
-            className={cn(
-              channelIconClass,
-              "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-              !canSms && "opacity-50",
-            )}
-            aria-hidden
-          >
-            <Smartphone className="size-4" />
-          </div>
-          <label
-            className={cn(
-              "flex min-w-0 flex-1 items-center gap-3",
-              canSms ? "cursor-pointer" : "cursor-not-allowed opacity-60",
-            )}
-          >
-            <Checkbox
-              checked={channels.sms}
-              disabled={!canSms}
-              onCheckedChange={(checked) => onSmsChange(Boolean(checked))}
-            />
-            <span className="text-sm">
-              <span className="font-medium">SMS</span>
-              {!canSms ? (
-                <span className="mt-0.5 block text-xs text-muted-foreground">
-                  Plano Pro ou Business
-                </span>
-              ) : (
-                <PhoneHint phone={userPhone} />
+              aria-hidden
+            >
+              <MessageCircle className="size-4" />
+            </div>
+            <label
+              className={cn(
+                "flex min-w-0 flex-1 items-center gap-3",
+                canWhatsapp ? "cursor-pointer" : "cursor-not-allowed opacity-60",
               )}
-            </span>
-          </label>
-        </div>
-
-        <div className="flex gap-3">
-          <div
-            className={cn(
-              channelIconClass,
-              "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-              !canEmail && "opacity-50",
-            )}
-            aria-hidden
-          >
-            <Mail className="size-4" />
-          </div>
-          <label
-            className={cn(
-              "flex min-w-0 flex-1 items-center gap-3",
-              canEmail ? "cursor-pointer" : "cursor-not-allowed opacity-60",
-            )}
-          >
-            <Checkbox
-              checked={channels.email}
-              disabled={!canEmail}
-              onCheckedChange={(checked) => onEmailChange(Boolean(checked))}
-            />
-            <span className="text-sm">
-              <span className="font-medium">E-mail</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                {userEmail ?? "—"}
+            >
+              <Checkbox
+                checked={channels.whatsapp}
+                disabled={!canWhatsapp}
+                onCheckedChange={(checked) => onWhatsappChange(Boolean(checked))}
+              />
+              <span className="text-sm">
+                <span className="font-medium">WhatsApp</span>
+                {!canWhatsapp ? (
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Plano Pro ou Business
+                  </span>
+                ) : (
+                  <PhoneHint phone={userPhone} />
+                )}
               </span>
-            </span>
-          </label>
+            </label>
+          </div>
+          {channels.whatsapp && canWhatsapp ? (
+            <ChannelRecipientsEditor
+              channel="whatsapp"
+              profileDestination={userPhone}
+              recipients={recipientLists.whatsapp ?? []}
+              allowRecipientLists={allowRecipientLists}
+              maxRecipients={maxRecipients}
+              onChange={(recipients) =>
+                onRecipientListChange("whatsapp", recipients)
+              }
+              className="ml-12"
+            />
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex gap-3">
+            <div
+              className={cn(
+                channelIconClass,
+                "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+                !canSms && "opacity-50",
+              )}
+              aria-hidden
+            >
+              <Smartphone className="size-4" />
+            </div>
+            <label
+              className={cn(
+                "flex min-w-0 flex-1 items-center gap-3",
+                canSms ? "cursor-pointer" : "cursor-not-allowed opacity-60",
+              )}
+            >
+              <Checkbox
+                checked={channels.sms}
+                disabled={!canSms}
+                onCheckedChange={(checked) => onSmsChange(Boolean(checked))}
+              />
+              <span className="text-sm">
+                <span className="font-medium">SMS</span>
+                {!canSms ? (
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Plano Pro ou Business
+                  </span>
+                ) : (
+                  <PhoneHint phone={userPhone} />
+                )}
+              </span>
+            </label>
+          </div>
+          {channels.sms && canSms ? (
+            <ChannelRecipientsEditor
+              channel="sms"
+              profileDestination={userPhone}
+              recipients={recipientLists.sms ?? []}
+              allowRecipientLists={allowRecipientLists}
+              maxRecipients={maxRecipients}
+              onChange={(recipients) => onRecipientListChange("sms", recipients)}
+              className="ml-12"
+            />
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex gap-3">
+            <div
+              className={cn(
+                channelIconClass,
+                "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+                !canEmail && "opacity-50",
+              )}
+              aria-hidden
+            >
+              <Mail className="size-4" />
+            </div>
+            <label
+              className={cn(
+                "flex min-w-0 flex-1 items-center gap-3",
+                canEmail ? "cursor-pointer" : "cursor-not-allowed opacity-60",
+              )}
+            >
+              <Checkbox
+                checked={channels.email}
+                disabled={!canEmail}
+                onCheckedChange={(checked) => onEmailChange(Boolean(checked))}
+              />
+              <span className="text-sm">
+                <span className="font-medium">E-mail</span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  {userEmail ?? "—"}
+                </span>
+              </span>
+            </label>
+          </div>
+          {channels.email && canEmail ? (
+            <ChannelRecipientsEditor
+              channel="email"
+              profileDestination={userEmail}
+              recipients={recipientLists.email ?? []}
+              allowRecipientLists={allowRecipientLists}
+              maxRecipients={maxRecipients}
+              onChange={(recipients) =>
+                onRecipientListChange("email", recipients)
+              }
+              className="ml-12"
+            />
+          ) : null}
         </div>
       </div>
       {touched && channelsError && (
