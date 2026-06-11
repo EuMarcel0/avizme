@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { RecipientLists } from "@/lib/billing/enforce-limits";
-import { resolveDestinationsForChannel } from "@/lib/billing/enforce-limits";
+import { resolveDestinationsForChannel } from "@/lib/billing/recipient-lists";
 import type { UserBillingContext } from "@/lib/billing/get-user-billing";
 import type { DeliveryChannel } from "@/lib/scheduling/types";
 
@@ -21,8 +21,7 @@ export function buildChannelRows(input: {
   profilePhone: string | null;
   recipientLists?: RecipientLists;
 }): ChannelRowInsert[] {
-  const { billing, enabledChannels, reminderId, profileEmail, profilePhone } =
-    input;
+  const { enabledChannels, reminderId, profileEmail, profilePhone } = input;
   const lists = input.recipientLists ?? {};
 
   return enabledChannels.map((channel) => {
@@ -31,16 +30,14 @@ export function buildChannelRows(input: {
       channel,
       profileEmail,
       profilePhone,
-      customList: billing.limits.allowRecipientLists ? customList : undefined,
+      customList,
     });
-
-    const useList = billing.limits.allowRecipientLists && (customList?.length ?? 0) > 0;
 
     return {
       reminder_id: reminderId,
       channel,
       destination: resolved[0] ?? null,
-      destinations: useList ? resolved : [],
+      destinations: resolved,
       is_enabled: true,
     };
   });

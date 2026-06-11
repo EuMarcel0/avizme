@@ -170,7 +170,7 @@ export function ChannelRecipientsEditor({
           <span className="font-medium text-foreground">
             {formatRecipientLabel(channel, profileDestination!)}
           </span>
-          . Adicione outros abaixo para substituir a lista.
+          . Adicione outros abaixo — o envio inclui seu perfil e os destinatários extras.
         </p>
       ) : (
         <p className="text-xs text-muted-foreground">

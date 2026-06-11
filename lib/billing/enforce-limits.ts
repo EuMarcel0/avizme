@@ -120,6 +120,7 @@ export function assertRecipientListsAllowed(
   );
 
   if (hasCustomLists && !billing.limits.allowRecipientLists) {
+    if (!isBillingEnforced()) return;
     throw new BillingLimitError(
       "Listas de destinatários estão disponíveis apenas no plano Business.",
       "recipient_list",
@@ -194,29 +195,4 @@ export function assertDispatchQuota(
   }
 
   return { allowed: true };
-}
-
-export function resolveDestinationsForChannel(input: {
-  channel: DeliveryChannel;
-  profileEmail: string | null;
-  profilePhone: string | null;
-  customList?: string[];
-}): string[] {
-  const custom = (input.customList ?? [])
-    .map((d) => d.trim())
-    .filter(Boolean);
-
-  if (custom.length > 0) return custom;
-
-  if (input.channel === "email" && input.profileEmail) {
-    return [input.profileEmail];
-  }
-  if (
-    (input.channel === "sms" || input.channel === "whatsapp") &&
-    input.profilePhone
-  ) {
-    return [input.profilePhone];
-  }
-
-  return [];
 }

@@ -11,6 +11,8 @@ import {
   ReminderAuthError,
 } from "@/lib/reminders/require-auth";
 import type { ClientBillingInfo } from "@/lib/billing/client-billing";
+import { recipientExtrasFromStored } from "@/lib/billing/recipient-lists";
+import type { DeliveryChannel } from "@/lib/scheduling/types";
 import type { NewReminderValues } from "@/lib/validations/reminder";
 import { createClient } from "@/lib/supabase/server";
 
@@ -123,11 +125,28 @@ export async function getReminderForEdit(
     whatsapp: [] as string[],
   };
 
+  const profileEmail = profile?.email ?? user.email ?? null;
+  const profilePhone = profile?.phone ?? null;
+
   for (const row of channelRows) {
-    const list = (row.destinations ?? []).filter(Boolean);
-    if (list.length > 0 && row.channel in recipientLists) {
-      recipientLists[row.channel as keyof typeof recipientLists] = list;
-    }
+    const stored = (
+      (row.destinations ?? []).length > 0
+        ? row.destinations
+        : row.destination
+          ? [row.destination]
+          : []
+    ).filter(Boolean) as string[];
+
+    if (stored.length === 0 || !(row.channel in recipientLists)) continue;
+
+    const channel = row.channel as DeliveryChannel;
+    recipientLists[channel as keyof typeof recipientLists] =
+      recipientExtrasFromStored(
+        channel,
+        stored,
+        profileEmail,
+        profilePhone,
+      );
   }
 
   const billingContext = await getUserBillingContext(supabase, user.id);
@@ -145,8 +164,8 @@ export async function getReminderForEdit(
     id: reminder.id,
     title: reminder.title,
     message: reminder.message,
-    userEmail: profile?.email ?? user.email ?? null,
-    userPhone: profile?.phone ?? null,
+    userEmail: profileEmail,
+    userPhone: profilePhone,
     billing,
     formValues,
   };

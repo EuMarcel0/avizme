@@ -132,13 +132,11 @@ export function ReminderForm({
           weekdays: values.weekdays?.filter((d): d is number => d !== undefined),
           dayOfMonth: values.dayOfMonth ?? undefined,
           channels: values.channels,
-          recipientLists: billing?.limits.allowRecipientLists
-            ? {
-                email: normalizeList(values.recipientLists?.email),
-                sms: normalizeList(values.recipientLists?.sms),
-                whatsapp: normalizeList(values.recipientLists?.whatsapp),
-              }
-            : undefined,
+          recipientLists: {
+            email: normalizeList(values.recipientLists?.email),
+            sms: normalizeList(values.recipientLists?.sms),
+            whatsapp: normalizeList(values.recipientLists?.whatsapp),
+          },
         };
 
         const result = isEdit

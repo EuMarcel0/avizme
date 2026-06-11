@@ -1,6 +1,7 @@
 import "server-only";
 
 import { buildChannelRows } from "@/lib/billing/build-channel-rows";
+import { normalizeRecipientLists } from "@/lib/billing/recipient-lists";
 import {
   assertChannelsAllowedForPlan,
   assertRecipientListsAllowed,
@@ -211,13 +212,15 @@ export async function updateReminder(
     throw new UpdateReminderError(deleteChannelsError.message, 500);
   }
 
+  const normalizedRecipientLists = normalizeRecipientLists(recipientLists);
+
   const channelRows = buildChannelRows({
     reminderId,
     enabledChannels,
     billing,
     profileEmail: profile?.email ?? user.email ?? null,
     profilePhone: profile?.phone ?? null,
-    recipientLists,
+    recipientLists: normalizedRecipientLists,
   });
 
   const { error: channelsError } = await supabase
