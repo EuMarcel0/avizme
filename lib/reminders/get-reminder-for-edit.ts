@@ -129,13 +129,15 @@ export async function getReminderForEdit(
   const profilePhone = profile?.phone ?? null;
 
   for (const row of channelRows) {
-    const stored = (
-      (row.destinations ?? []).length > 0
-        ? row.destinations
-        : row.destination
-          ? [row.destination]
-          : []
-    ).filter(Boolean) as string[];
+    const rawDestinations = (row.destinations ?? []).filter(
+      (d): d is string => Boolean(d),
+    );
+    const stored =
+      rawDestinations.length > 0
+        ? rawDestinations
+        : row.destination?.trim()
+          ? [row.destination.trim()]
+          : [];
 
     if (stored.length === 0 || !(row.channel in recipientLists)) continue;
 

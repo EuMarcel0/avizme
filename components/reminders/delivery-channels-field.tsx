@@ -46,6 +46,10 @@ function PhoneHint({ phone }: { phone?: string | null }) {
   );
 }
 
+function asRecipientList(items?: (string | undefined)[] | null): string[] {
+  return (items ?? []).filter((item): item is string => Boolean(item?.trim()));
+}
+
 export function DeliveryChannelsField({
   channels,
   recipientLists,
@@ -114,7 +118,7 @@ export function DeliveryChannelsField({
             <ChannelRecipientsEditor
               channel="whatsapp"
               profileDestination={userPhone}
-              recipients={recipientLists.whatsapp ?? []}
+              recipients={asRecipientList(recipientLists.whatsapp)}
               allowRecipientLists={allowRecipientLists}
               maxRecipients={maxRecipients}
               onChange={(recipients) =>
@@ -164,7 +168,7 @@ export function DeliveryChannelsField({
             <ChannelRecipientsEditor
               channel="sms"
               profileDestination={userPhone}
-              recipients={recipientLists.sms ?? []}
+              recipients={asRecipientList(recipientLists.sms)}
               allowRecipientLists={allowRecipientLists}
               maxRecipients={maxRecipients}
               onChange={(recipients) => onRecipientListChange("sms", recipients)}
@@ -208,7 +212,7 @@ export function DeliveryChannelsField({
             <ChannelRecipientsEditor
               channel="email"
               profileDestination={userEmail}
-              recipients={recipientLists.email ?? []}
+              recipients={asRecipientList(recipientLists.email)}
               allowRecipientLists={allowRecipientLists}
               maxRecipients={maxRecipients}
               onChange={(recipients) =>
