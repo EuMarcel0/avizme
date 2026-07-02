@@ -110,6 +110,18 @@ export function assertActiveReminderLimit(
   }
 }
 
+export function assertDuplicateReminderAllowed(
+  billing: UserBillingContext,
+): void {
+  if (!isBillingEnforced()) return;
+  if (!billing.hasActiveSubscription) {
+    throw new BillingLimitError(
+      "Duplicar lembrete exige assinatura Pro ou Premium ativa.",
+      "upgrade_required",
+    );
+  }
+}
+
 export function assertRecipientListsAllowed(
   billing: UserBillingContext,
   recipientLists: RecipientLists | undefined,

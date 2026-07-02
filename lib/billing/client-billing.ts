@@ -91,3 +91,10 @@ export function canUseChannel(
 ): boolean {
   return billing.limits.channels.includes(channel);
 }
+
+export function canDuplicateReminder(
+  billing: ClientBillingInfo | undefined,
+): boolean {
+  if (!billing) return false;
+  return billing.hasActiveSubscription;
+}

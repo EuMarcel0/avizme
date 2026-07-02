@@ -23,6 +23,7 @@ import {
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 import { getRemindersPageAction } from "@/app/actions/reminders";
 import type { ReminderListScope } from "@/lib/reminders/reminder-list-params";
 import {
@@ -101,12 +102,14 @@ type RemindersViewProps = {
   scope: ReminderListScope;
   emptyTitle?: string;
   emptyDescription?: string;
+  billing?: ClientBillingInfo;
 };
 
 export function RemindersView({
   scope,
   emptyTitle = "Nenhum lembrete encontrado",
   emptyDescription = "Ajuste os filtros ou crie um novo lembrete.",
+  billing,
 }: RemindersViewProps) {
   const queryClient = useQueryClient();
   const isMdUp = useMediaQuery("(min-width: 768px)");
@@ -410,14 +413,14 @@ export function RemindersView({
           )}
         >
           {gridItems.map((reminder) => (
-            <ReminderCard key={reminder.id} reminder={reminder} />
+            <ReminderCard key={reminder.id} reminder={reminder} billing={billing} />
           ))}
         </div>
       ) : null}
 
       {showList && !isListContentLoading && listItems.length > 0 ? (
         <div className="hidden md:block">
-          <RemindersTable reminders={listItems} />
+          <RemindersTable reminders={listItems} billing={billing} />
           <RemindersListPagination
             page={listPage}
             pageSize={REMINDERS_PAGE_SIZE_LIST}

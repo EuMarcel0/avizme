@@ -1,7 +1,9 @@
 import { Calendar, Clock, MessageSquare } from "lucide-react";
 
+import { DuplicateReminderButton } from "@/components/reminders/duplicate-reminder-button";
 import { ReminderAttachmentsButton } from "@/components/reminders/reminder-attachments-button";
 import { EditReminderButton } from "@/components/reminders/edit-reminder-button";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 import { ReminderStatusToggle } from "@/components/reminders/reminder-status-toggle";
 import { ViewReminderButton } from "@/components/reminders/view-reminder-button";
 import { Badge } from "@/components/ui/badge";
@@ -19,9 +21,10 @@ import { ptBR } from "date-fns/locale";
 
 type ReminderCardProps = {
   reminder: ReminderListItem;
+  billing?: ClientBillingInfo;
 };
 
-export function ReminderCard({ reminder }: ReminderCardProps) {
+export function ReminderCard({ reminder, billing }: ReminderCardProps) {
   const readOnly = isReminderReadOnly(reminder.status);
 
   return (
@@ -96,6 +99,11 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
             />
             {!readOnly && (
               <>
+                <DuplicateReminderButton
+                  reminder={reminder}
+                  billing={billing}
+                  variant="button"
+                />
                 <EditReminderButton reminderId={reminder.id} variant="button" />
                 <ReminderStatusToggle reminder={reminder} variant="button" />
               </>

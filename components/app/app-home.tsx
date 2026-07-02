@@ -66,7 +66,7 @@ export function AppHome({
           </CardContent>
         </Card>
       ) : (
-        <RemindersView scope="ongoing" />
+        <RemindersView scope="ongoing" billing={billing} />
       )}
     </div>
   );

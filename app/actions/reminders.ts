@@ -7,6 +7,10 @@ import {
   CreateReminderError,
   type CreateReminderInput,
 } from "@/lib/reminders/create-reminder";
+import {
+  duplicateReminder,
+  DuplicateReminderError,
+} from "@/lib/reminders/duplicate-reminder";
 import { listRemindersPaginated } from "@/lib/reminders/list-reminders-paginated";
 import type {
   ReminderListQuery,
@@ -91,6 +95,21 @@ export async function updateReminderAction(
       return { ok: false, error: error.message };
     }
     return { ok: false, error: "Não foi possível atualizar o lembrete." };
+  }
+}
+
+export async function duplicateReminderAction(
+  reminderId: string,
+): Promise<CreateReminderActionResult> {
+  try {
+    const { id } = await duplicateReminder(reminderId);
+    revalidatePath("/app");
+    return { ok: true, id };
+  } catch (error) {
+    if (error instanceof DuplicateReminderError) {
+      return { ok: false, error: error.message };
+    }
+    return { ok: false, error: "Não foi possível duplicar o lembrete." };
   }
 }
 

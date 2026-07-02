@@ -1,5 +1,7 @@
+import { DuplicateReminderButton } from "@/components/reminders/duplicate-reminder-button";
 import { ReminderAttachmentsButton } from "@/components/reminders/reminder-attachments-button";
 import { EditReminderButton } from "@/components/reminders/edit-reminder-button";
+import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 import { ReminderStatusToggle } from "@/components/reminders/reminder-status-toggle";
 import { ViewReminderButton } from "@/components/reminders/view-reminder-button";
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +18,10 @@ import { ptBR } from "date-fns/locale";
 
 type RemindersTableProps = {
   reminders: ReminderListItem[];
+  billing?: ClientBillingInfo;
 };
 
-export function RemindersTable({ reminders }: RemindersTableProps) {
+export function RemindersTable({ reminders, billing }: RemindersTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border/80 bg-white shadow-sm dark:bg-card/90">
       <table className="w-full min-w-[720px] border-collapse text-left text-sm">
@@ -90,6 +93,11 @@ export function RemindersTable({ reminders }: RemindersTableProps) {
                   />
                   {!isReminderReadOnly(reminder.status) && (
                     <>
+                      <DuplicateReminderButton
+                        reminder={reminder}
+                        billing={billing}
+                        variant="icon"
+                      />
                       <EditReminderButton
                         reminderId={reminder.id}
                         variant="icon"
