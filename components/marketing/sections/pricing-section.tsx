@@ -20,11 +20,11 @@ export function PricingSection() {
             Planos transparentes
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Comece no Free e faça upgrade quando precisar de SMS, WhatsApp ou
-            listas de destinatários.
+            Crie sua conta e assine quando precisar de SMS, WhatsApp ou
+            destinatários extras.
           </p>
         </div>
-        <ul className="mt-12 grid gap-6 lg:grid-cols-3">
+        <ul className="mx-auto mt-12 grid max-w-3xl gap-6 sm:grid-cols-2">
           {plans.map((plan) => (
             <li
               key={plan.tier}
