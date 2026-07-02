@@ -41,13 +41,17 @@ export function DuplicateReminderButton({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const allowed =
-    reminder.status === "active" &&
-    (!isBillingEnforced() || canDuplicateReminder(billing));
+  const canDuplicate =
+    !isBillingEnforced() || canDuplicateReminder(billing);
 
-  if (!allowed) return null;
+  if (reminder.status !== "active") return null;
 
   async function handleConfirm() {
+    if (!canDuplicate) {
+      toast.error("Duplicar lembrete exige assinatura Pro ou Premium ativa.");
+      return;
+    }
+
     setLoading(true);
     const result = await duplicateReminderAction(reminder.id);
     setLoading(false);
@@ -100,9 +104,9 @@ export function DuplicateReminderButton({
               canais serão copiados.
             </DialogDescription>
           </DialogHeader>
-          {!billing?.hasActiveSubscription && isBillingEnforced() ? (
+          {!canDuplicate && isBillingEnforced() ? (
             <p className="text-sm text-muted-foreground">
-              Recurso disponível nos planos Pro e Premium.{" "}
+              Recurso disponível nos planos Pro e Premium com assinatura ativa.{" "}
               <PlanPageLink>Ver planos</PlanPageLink>
             </p>
           ) : null}
@@ -115,7 +119,11 @@ export function DuplicateReminderButton({
             >
               Cancelar
             </Button>
-            <Button type="button" onClick={handleConfirm} disabled={loading}>
+            <Button
+              type="button"
+              onClick={handleConfirm}
+              disabled={loading || (!canDuplicate && isBillingEnforced())}
+            >
               {loading ? (
                 <ButtonLabelSkeleton className="w-20" />
               ) : (
