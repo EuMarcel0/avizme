@@ -74,7 +74,7 @@ export function DeliveryChannelsField({
       <Label className="text-sm font-medium">Onde enviar?</Label>
       {!canSms && !canWhatsapp && billing && (
         <p className="text-xs text-muted-foreground">
-          SMS e WhatsApp exigem plano Pro ou Business.{" "}
+          SMS e WhatsApp exigem assinatura Pro ou Premium.{" "}
           <PlanPageLink>Ver planos</PlanPageLink>
         </p>
       )}
@@ -106,7 +106,7 @@ export function DeliveryChannelsField({
                 <span className="font-medium">WhatsApp</span>
                 {!canWhatsapp ? (
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                    Plano Pro ou Business
+                    Assinatura Pro ou Premium
                   </span>
                 ) : (
                   <PhoneHint phone={userPhone} />
@@ -156,7 +156,7 @@ export function DeliveryChannelsField({
                 <span className="font-medium">SMS</span>
                 {!canSms ? (
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                    Plano Pro ou Business
+                    Assinatura Pro ou Premium
                   </span>
                 ) : (
                   <PhoneHint phone={userPhone} />

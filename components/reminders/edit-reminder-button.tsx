@@ -53,6 +53,7 @@ export function EditReminderButton({
           userEmail={result.data.userEmail}
           userPhone={result.data.userPhone}
           billing={result.data.billing}
+          initialAttachments={result.data.attachments}
         />
       ),
     });

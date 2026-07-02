@@ -12,8 +12,8 @@ export const HERO = {
 
 export const TRUST_POINTS = [
   "Sem cartão para começar",
-  "E-mail no plano Free",
-  "SMS e WhatsApp no Pro",
+  "Pro: até 10 lembretes por e-mail",
+  "SMS e WhatsApp com assinatura",
 ] as const;
 
 export const FEATURES = [
@@ -83,12 +83,12 @@ export const FAQ_ITEMS = [
   {
     question: "O Avizme é gratuito?",
     answer:
-      "Sim. O plano Free inclui lembretes por e-mail com limite diário e até 5 lembretes ativos. Para SMS, WhatsApp e agendamentos avançados, assine o Pro ou Business.",
+      "Sim. Crie conta e use o Pro sem assinatura: até 10 lembretes por e-mail. Para SMS, WhatsApp e destinatários extras, assine o Pro ou Premium.",
   },
   {
     question: "Preciso de cartão de crédito para testar?",
     answer:
-      "Não. Você pode criar conta e usar o plano Free sem cartão. A assinatura paga só é necessária quando quiser upgrade.",
+      "Não. Você pode criar conta e usar o Pro sem assinatura (limite de 10 lembretes por e-mail). A assinatura paga só é necessária quando quiser SMS, WhatsApp ou destinatários extras.",
   },
   {
     question: "Quais tipos de agendamento existem?",
@@ -194,7 +194,6 @@ const PLAN_CARDS: Omit<
   MarketingPlanCard,
   "label" | "description" | "features"
 >[] = [
-  { tier: "free", cta: "Criar conta grátis", ctaHref: "/cadastro" },
   {
     tier: "pro",
     highlighted: true,
@@ -202,9 +201,9 @@ const PLAN_CARDS: Omit<
     ctaHref: "/cadastro?plano=pro",
   },
   {
-    tier: "business",
-    cta: "Assinar Business",
-    ctaHref: "/cadastro?plano=business",
+    tier: "premium",
+    cta: "Assinar Premium",
+    ctaHref: "/cadastro?plano=premium",
   },
 ];
 

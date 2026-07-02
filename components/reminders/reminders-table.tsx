@@ -1,3 +1,4 @@
+import { ReminderAttachmentsButton } from "@/components/reminders/reminder-attachments-button";
 import { EditReminderButton } from "@/components/reminders/edit-reminder-button";
 import { ReminderStatusToggle } from "@/components/reminders/reminder-status-toggle";
 import { ViewReminderButton } from "@/components/reminders/view-reminder-button";
@@ -82,6 +83,11 @@ export function RemindersTable({ reminders }: RemindersTableProps) {
               <td className="px-4 py-3 align-middle">
                 <div className="flex items-center justify-center gap-1 [&_button]:opacity-70 [&_button]:transition-opacity [&_button:hover]:opacity-100">
                   <ViewReminderButton reminder={reminder} />
+                  <ReminderAttachmentsButton
+                    reminderId={reminder.id}
+                    reminderTitle={reminder.title}
+                    attachments={reminder.attachments}
+                  />
                   {!isReminderReadOnly(reminder.status) && (
                     <>
                       <EditReminderButton

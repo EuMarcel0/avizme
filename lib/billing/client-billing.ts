@@ -1,5 +1,10 @@
 import type { UserBillingContext } from "@/lib/billing/get-user-billing";
-import { allowedScheduleModesForPlan, getPlanFeatures, PLAN_LIMITS, type PlanTier } from "@/lib/billing/plans";
+import {
+  allowedScheduleModesForPlan,
+  getPlanFeatures,
+  getProUnsubscribedFeatures,
+  type PlanTier,
+} from "@/lib/billing/plans";
 import type { SubscriptionPeriodFields } from "@/lib/billing/subscription-period-fields";
 import {
   buildSubscriptionDatesDisplay,
@@ -25,6 +30,7 @@ export type ClientBillingInfo = {
     channels: UserBillingContext["limits"]["channels"];
     allowedScheduleModes: ScheduleMode[];
   };
+  hasActiveSubscription: boolean;
   stripeEnabled: boolean;
 };
 
@@ -43,7 +49,7 @@ export function toClientBillingInfo(
 
   return {
     planTier,
-    planLabel: PLAN_LIMITS[planTier].label,
+    planLabel: limits.label,
     subscriptionStatus,
     subscriptionDates: buildSubscriptionDatesDisplay({
       planTier: billing.rawPlanTier,
@@ -52,8 +58,11 @@ export function toClientBillingInfo(
       cancelAtPeriodEnd,
       subscriptionEndsAt,
     }),
-    features: getPlanFeatures(planTier),
+    features: billing.hasActiveSubscription
+      ? getPlanFeatures(planTier)
+      : getProUnsubscribedFeatures(),
     usage,
+    hasActiveSubscription: billing.hasActiveSubscription,
     limits: {
       emailsPerDay: limits.emailsPerDay,
       smsPerMonth: limits.smsPerMonth,
@@ -62,7 +71,7 @@ export function toClientBillingInfo(
       allowRecipientLists: limits.allowRecipientLists,
       maxRecipientsPerChannel: limits.maxRecipientsPerChannel,
       channels: limits.channels,
-      allowedScheduleModes: allowedScheduleModesForPlan(planTier),
+      allowedScheduleModes: allowedScheduleModesForPlan(limits),
     },
     stripeEnabled,
   };

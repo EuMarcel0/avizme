@@ -2,7 +2,11 @@ import { isBillingEnforced } from "@/lib/billing/is-billing-enforced";
 import type { ScheduleMode } from "@/lib/reminders/build-schedules";
 import type { DeliveryChannel } from "@/lib/scheduling/types";
 
-export type PlanTier = "free" | "pro" | "business";
+/** Planos atuais no produto. */
+export type PlanTier = "pro" | "premium";
+
+/** Valores legados ainda presentes no banco / Stripe antigo. */
+export type StoredPlanTier = PlanTier | "free" | "business";
 
 export const ALL_SCHEDULE_MODES: ScheduleMode[] = [
   "single",
@@ -13,8 +17,6 @@ export const ALL_SCHEDULE_MODES: ScheduleMode[] = [
   "weekly",
   "monthly",
 ];
-
-export const FREE_SCHEDULE_MODES: ScheduleMode[] = ["single"];
 
 export type SubscriptionStatus =
   | "none"
@@ -36,22 +38,24 @@ export type PlanLimits = {
   allowedScheduleModes: ScheduleMode[];
 };
 
+/** Pro sem assinatura ativa — até 10 lembretes no banco. */
+export const PRO_UNSUBSCRIBED_LIMITS: PlanLimits = {
+  label: "Pro (trial)",
+  description: "Até 10 lembretes. Assine o Pro para SMS, WhatsApp e destinatários extras.",
+  channels: ["email"],
+  emailsPerDay: 10,
+  smsPerMonth: 0,
+  whatsappPerMonth: 0,
+  maxActiveReminders: 10,
+  allowRecipientLists: false,
+  maxRecipientsPerChannel: 1,
+  allowedScheduleModes: ALL_SCHEDULE_MODES,
+};
+
 export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
-  free: {
-    label: "Free",
-    description: "E-mail com limite diário. Ideal para começar.",
-    channels: ["email"],
-    emailsPerDay: 10,
-    smsPerMonth: 0,
-    whatsappPerMonth: 0,
-    maxActiveReminders: 5,
-    allowRecipientLists: false,
-    maxRecipientsPerChannel: 1,
-    allowedScheduleModes: FREE_SCHEDULE_MODES,
-  },
   pro: {
     label: "Pro",
-    description: "SMS, WhatsApp e destinatários por lembrete.",
+    description: "SMS, WhatsApp, destinatários por lembrete e lembretes ampliados.",
     channels: ["email", "sms", "whatsapp"],
     emailsPerDay: null,
     smsPerMonth: 100,
@@ -61,9 +65,9 @@ export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
     maxRecipientsPerChannel: 20,
     allowedScheduleModes: ALL_SCHEDULE_MODES,
   },
-  business: {
-    label: "Business",
-    description: "Listas de e-mails e números por lembrete.",
+  premium: {
+    label: "Premium",
+    description: "Limites ampliados para equipes e alto volume de envios.",
     channels: ["email", "sms", "whatsapp"],
     emailsPerDay: null,
     smsPerMonth: 500,
@@ -80,6 +84,29 @@ export type PlanFeature = {
   included: boolean;
 };
 
+export function normalizeStoredPlanTier(value: string | null | undefined): PlanTier {
+  if (value === "premium" || value === "business") return "premium";
+  return "pro";
+}
+
+export function hasActiveSubscription(status: SubscriptionStatus): boolean {
+  return (
+    status === "active" ||
+    status === "trialing" ||
+    status === "past_due"
+  );
+}
+
+export function resolvePlanLimits(
+  rawPlanTier: PlanTier,
+  subscriptionStatus: SubscriptionStatus,
+): PlanLimits {
+  if (!hasActiveSubscription(subscriptionStatus)) {
+    return PRO_UNSUBSCRIBED_LIMITS;
+  }
+  return PLAN_LIMITS[rawPlanTier];
+}
+
 export function getPlanFeatures(tier: PlanTier): PlanFeature[] {
   const limits = PLAN_LIMITS[tier];
   return [
@@ -91,11 +118,11 @@ export function getPlanFeatures(tier: PlanTier): PlanFeature[] {
       included: true,
     },
     {
-      text: "SMS para seu número",
+      text: "SMS",
       included: limits.channels.includes("sms"),
     },
     {
-      text: "WhatsApp para seu número",
+      text: "WhatsApp",
       included: limits.channels.includes("whatsapp"),
     },
     {
@@ -107,60 +134,64 @@ export function getPlanFeatures(tier: PlanTier): PlanFeature[] {
       included: true,
     },
     {
-      text:
-        limits.allowedScheduleModes.length === 1
-          ? 'Agendamento "Uma vez" apenas'
-          : "Todos os tipos de agendamento",
+      text: "Todos os tipos de agendamento",
       included: true,
     },
   ];
 }
 
-export function isPaidPlan(tier: PlanTier): boolean {
-  return tier === "pro" || tier === "business";
+export function getProUnsubscribedFeatures(): PlanFeature[] {
+  const limits = PRO_UNSUBSCRIBED_LIMITS;
+  return [
+    { text: `${limits.emailsPerDay} e-mails por dia`, included: true },
+    { text: "SMS", included: false },
+    { text: "WhatsApp", included: false },
+    {
+      text: `Até ${limits.maxActiveReminders} lembretes (sem assinatura)`,
+      included: true,
+    },
+    { text: "Destinatários extras", included: false },
+    { text: "Todos os tipos de agendamento", included: true },
+  ];
 }
 
+export function isPaidPlan(tier: PlanTier): boolean {
+  return tier === "pro" || tier === "premium";
+}
+
+/** @deprecated Use normalizeStoredPlanTier + resolvePlanLimits */
 export function effectivePlanTier(
-  tier: PlanTier,
+  tier: StoredPlanTier,
   subscriptionStatus: SubscriptionStatus,
 ): PlanTier {
-  if (subscriptionStatus === "active" || subscriptionStatus === "trialing") {
-    return tier;
-  }
-  if (tier !== "free" && subscriptionStatus === "past_due") {
-    return tier;
-  }
-  if (tier !== "free") {
-    return "free";
-  }
-  return "free";
+  void subscriptionStatus;
+  return normalizeStoredPlanTier(tier);
 }
 
 export function channelAllowedForPlan(
-  tier: PlanTier,
+  limits: PlanLimits,
   channel: DeliveryChannel,
 ): boolean {
-  return PLAN_LIMITS[tier].channels.includes(channel);
+  return limits.channels.includes(channel);
 }
 
 export function scheduleModeAllowedForPlan(
-  tier: PlanTier,
+  limits: PlanLimits,
   mode: ScheduleMode,
 ): boolean {
   if (!isBillingEnforced()) return true;
-  return PLAN_LIMITS[tier].allowedScheduleModes.includes(mode);
+  return limits.allowedScheduleModes.includes(mode);
 }
 
 export function clampScheduleModeForPlan(
-  tier: PlanTier,
+  limits: PlanLimits,
   mode: ScheduleMode,
 ): ScheduleMode {
   if (!isBillingEnforced()) return mode;
-  return scheduleModeAllowedForPlan(tier, mode) ? mode : "single";
+  return scheduleModeAllowedForPlan(limits, mode) ? mode : "single";
 }
 
-/** Modos exibidos no picker (dev = todos; produção = conforme plano). */
-export function allowedScheduleModesForPlan(tier: PlanTier): ScheduleMode[] {
+export function allowedScheduleModesForPlan(limits: PlanLimits): ScheduleMode[] {
   if (!isBillingEnforced()) return ALL_SCHEDULE_MODES;
-  return PLAN_LIMITS[tier].allowedScheduleModes;
+  return limits.allowedScheduleModes;
 }

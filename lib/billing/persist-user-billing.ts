@@ -66,7 +66,7 @@ export async function persistUserBillingDowngrade(
   const updatedAt = new Date().toISOString();
 
   const base = {
-    plan_tier: "free" as const,
+    plan_tier: "pro" as const,
     subscription_status: "none" as const,
     stripe_subscription_id: null,
     plan_period_end: null,

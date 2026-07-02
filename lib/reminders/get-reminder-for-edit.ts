@@ -1,6 +1,6 @@
 import "server-only";
 
-import { toClientBillingInfo } from "@/lib/billing/client-billing";
+import { toClientBillingInfo, type ClientBillingInfo } from "@/lib/billing/client-billing";
 import { getUserBillingContext } from "@/lib/billing/get-user-billing";
 import { clampScheduleModeForPlan } from "@/lib/billing/plans";
 import { isStripeConfigured } from "@/lib/billing/stripe-config";
@@ -10,7 +10,8 @@ import {
   requireReminderOwnedByUser,
   ReminderAuthError,
 } from "@/lib/reminders/require-auth";
-import type { ClientBillingInfo } from "@/lib/billing/client-billing";
+import type { ReminderAttachmentRecord } from "@/lib/reminders/reminder-attachments";
+import { listReminderAttachments } from "@/lib/reminders/reminder-attachments";
 import { recipientExtrasFromStored } from "@/lib/billing/recipient-lists";
 import type { DeliveryChannel } from "@/lib/scheduling/types";
 import type { NewReminderValues } from "@/lib/validations/reminder";
@@ -34,6 +35,7 @@ export type ReminderForEdit = {
   userPhone: string | null;
   billing: ClientBillingInfo;
   formValues: NewReminderValues;
+  attachments: ReminderAttachmentRecord[];
 };
 
 export async function getReminderForEdit(
@@ -153,12 +155,13 @@ export async function getReminderForEdit(
 
   const billingContext = await getUserBillingContext(supabase, user.id);
   const billing = toClientBillingInfo(billingContext, isStripeConfigured());
+  const attachments = await listReminderAttachments(reminderId);
 
   const formValues: NewReminderValues = {
     title: reminder.title,
     message: reminder.message,
     ...schedulePart,
-    mode: clampScheduleModeForPlan(billing.planTier, schedulePart.mode),
+    mode: clampScheduleModeForPlan(billingContext.limits, schedulePart.mode),
     recipientLists,
   };
 
@@ -170,5 +173,6 @@ export async function getReminderForEdit(
     userPhone: profilePhone,
     billing,
     formValues,
+    attachments,
   };
 }

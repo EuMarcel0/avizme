@@ -28,7 +28,7 @@ export function ScheduleModePicker({
   function handleSelect(mode: ScheduleMode, allowed: boolean) {
     if (!allowed) {
       toast.error(
-        'Este tipo de agendamento está disponível nos planos Pro e Business. No Free, use apenas "Uma vez".',
+        'Assine o Pro ou Premium para usar este tipo de agendamento.',
       );
       return;
     }

@@ -40,6 +40,12 @@ const REMINDER_LIST_SELECT = `
   reminder_delivery_channels (
     channel,
     is_enabled
+  ),
+  reminder_attachments (
+    id,
+    file_name,
+    mime_type,
+    size_bytes
   )
 `;
 
@@ -52,6 +58,7 @@ type ReminderRowPayload = {
   updated_at: string;
   reminder_schedules: Parameters<typeof mapReminderRow>[0]["reminder_schedules"];
   reminder_delivery_channels: Parameters<typeof mapReminderRow>[0]["reminder_delivery_channels"];
+  reminder_attachments: Parameters<typeof mapReminderRow>[0]["reminder_attachments"];
 };
 
 function escapeIlikePattern(value: string): string {

@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 function planBadgeClass(tier: PlanTier | undefined): string {
   switch (tier) {
-    case "business":
+    case "premium":
       return "border-primary/30 bg-primary/10 text-primary";
     case "pro":
       return "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300";
@@ -38,7 +38,7 @@ export function UserMenu({ user }: { user: AppUser }) {
   const router = useRouter();
   const supabase = createClient();
   const displayName = getDisplayName(user);
-  const planLabel = user.planLabel ?? "Free";
+  const planLabel = user.planLabel ?? "Pro";
 
   async function handleSignOut() {
     const { error } = await supabase.auth.signOut();

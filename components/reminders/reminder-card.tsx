@@ -1,5 +1,6 @@
 import { Calendar, Clock, MessageSquare } from "lucide-react";
 
+import { ReminderAttachmentsButton } from "@/components/reminders/reminder-attachments-button";
 import { EditReminderButton } from "@/components/reminders/edit-reminder-button";
 import { ReminderStatusToggle } from "@/components/reminders/reminder-status-toggle";
 import { ViewReminderButton } from "@/components/reminders/view-reminder-button";
@@ -87,6 +88,12 @@ export function ReminderCard({ reminder }: ReminderCardProps) {
           </p>
           <div className="flex flex-wrap items-center gap-1.5">
             <ViewReminderButton reminder={reminder} variant="button" />
+            <ReminderAttachmentsButton
+              reminderId={reminder.id}
+              reminderTitle={reminder.title}
+              attachments={reminder.attachments}
+              variant="button"
+            />
             {!readOnly && (
               <>
                 <EditReminderButton reminderId={reminder.id} variant="button" />

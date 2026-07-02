@@ -1,14 +1,19 @@
 import type { RecipientLists } from "@/lib/billing/enforce-limits";
 import { toE164Brazil } from "@/lib/phone/to-e164-brazil";
+import { isValidBrazilPhone, phoneDigits } from "@/lib/phone/format-brazil-phone";
 import type { DeliveryChannel } from "@/lib/scheduling/types";
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 function destinationKey(channel: DeliveryChannel, value: string): string {
   if (channel === "email") return normalizeEmail(value);
-  return toE164Brazil(value) ?? value.replace(/\D/g, "");
+  return toE164Brazil(value) ?? phoneDigits(value);
 }
 
 function normalizeStoredDestination(
@@ -16,7 +21,11 @@ function normalizeStoredDestination(
   value: string,
 ): string {
   if (channel === "email") return normalizeEmail(value);
-  return toE164Brazil(value) ?? value.trim();
+  const e164 = toE164Brazil(value);
+  if (!e164) {
+    throw new Error(`Telefone inválido: ${value}`);
+  }
+  return e164;
 }
 
 /** Normaliza listas do formulário antes de persistir no banco. */
@@ -25,19 +34,34 @@ export function normalizeRecipientLists(
 ): RecipientLists | undefined {
   if (!lists) return undefined;
 
-  const normalizePhones = (items?: string[]) =>
-    (items ?? [])
-      .map((p) => toE164Brazil(p))
-      .filter((p): p is string => Boolean(p));
+  const email = (lists.email ?? [])
+    .map((value) => {
+      const normalized = normalizeEmail(String(value));
+      if (!isValidEmail(normalized)) {
+        throw new Error(`E-mail inválido: ${value}`);
+      }
+      return normalized;
+    })
+    .filter(Boolean);
+
+  const normalizePhones = (items: (string | undefined)[] | undefined) =>
+    (items ?? []).map((value) => {
+      const raw = String(value ?? "").trim();
+      if (!raw) return null;
+      if (!isValidBrazilPhone(raw)) {
+        throw new Error(`Telefone inválido: ${raw}`);
+      }
+      return normalizeStoredDestination("sms", raw);
+    }).filter((p): p is string => Boolean(p));
 
   return {
-    email: (lists.email ?? []).map(normalizeEmail).filter(Boolean),
+    email,
     sms: normalizePhones(lists.sms),
     whatsapp: normalizePhones(lists.whatsapp),
   };
 }
 
-/** Perfil + extras (sem duplicar). Se não houver extras, usa só o perfil. */
+/** Perfil + extras (sem duplicar). */
 export function resolveDestinationsForChannel(input: {
   channel: DeliveryChannel;
   profileEmail: string | null;
@@ -59,8 +83,11 @@ export function resolveDestinationsForChannel(input: {
   }
 
   const custom = (input.customList ?? [])
-    .map((d) => normalizeStoredDestination(input.channel, d))
-    .filter(Boolean);
+    .map((d) => {
+      if (!d?.trim()) return null;
+      return normalizeStoredDestination(input.channel, d);
+    })
+    .filter((d): d is string => Boolean(d));
 
   const merged = [...profileDestinations, ...custom];
   const seen = new Set<string>();

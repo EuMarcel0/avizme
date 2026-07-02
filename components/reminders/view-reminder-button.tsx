@@ -2,6 +2,7 @@
 
 import { Info } from "lucide-react";
 
+import { ReminderAttachmentsList } from "@/components/reminders/reminder-attachments-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal";
@@ -56,6 +57,8 @@ function ReminderDetailsContent({ reminder }: { reminder: ReminderListItem }) {
           {reminder.cycleEndDetails}
         </p>
       </div>
+
+      <ReminderAttachmentsList attachments={reminder.attachments} />
 
       <div>
         <p className="text-xs font-medium text-muted-foreground">Mensagem</p>

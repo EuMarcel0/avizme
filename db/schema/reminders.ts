@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   date,
   integer,
@@ -65,9 +66,26 @@ export const reminderDeliveryChannels = pgTable("reminder_delivery_channels", {
     .references(() => reminders.id, { onDelete: "cascade" }),
   channel: deliveryChannelEnum("channel").notNull(),
   destination: text("destination"),
-  /** Lista de destinos (Business). Vazio = usa destination do perfil. */
+  /** Lista de destinos (perfil + extras). */
   destinations: jsonb("destinations").$type<string[]>().default([]).notNull(),
   isEnabled: boolean("is_enabled").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const reminderAttachments = pgTable("reminder_attachments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reminderId: uuid("reminder_id")
+    .notNull()
+    .references(() => reminders.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
+  storagePath: text("storage_path").notNull().unique(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -98,6 +116,7 @@ export const remindersRelations = relations(reminders, ({ one, many }) => ({
   }),
   schedules: many(reminderSchedules),
   deliveryChannels: many(reminderDeliveryChannels),
+  attachments: many(reminderAttachments),
   occurrences: many(reminderOccurrences),
 }));
 

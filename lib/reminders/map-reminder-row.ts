@@ -4,6 +4,7 @@ import { ptBR } from "date-fns/locale";
 import type { ScheduleType } from "@/lib/schedule-types";
 import { SCHEDULE_TYPE_LABELS, DELIVERY_CHANNEL_LABELS } from "@/lib/schedule-types";
 import type { ReminderStatus } from "@/lib/reminders/reminder-status";
+import type { ReminderAttachmentSummary } from "@/lib/reminders/attachment-utils";
 import { buildReminderDetails } from "@/lib/reminders/describe-reminder-details";
 import type { ScheduleRowForForm } from "@/lib/reminders/map-schedule-rows-to-form";
 
@@ -15,6 +16,15 @@ type ChannelRow = {
   channel: keyof typeof DELIVERY_CHANNEL_LABELS;
   is_enabled: boolean;
 };
+
+type AttachmentRow = {
+  id: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+};
+
+export type { ReminderAttachmentSummary };
 
 export type ReminderListItem = {
   id: string;
@@ -30,6 +40,7 @@ export type ReminderListItem = {
   channels: Array<keyof typeof DELIVERY_CHANNEL_LABELS>;
   deliveryDetails: string;
   cycleEndDetails: string;
+  attachments: ReminderAttachmentSummary[];
 };
 
 function formatIsoDate(iso: string | null): string | null {
@@ -94,9 +105,11 @@ export function mapReminderRow(row: {
   updated_at: string;
   reminder_schedules: ScheduleRow[] | null;
   reminder_delivery_channels: ChannelRow[] | null;
+  reminder_attachments?: AttachmentRow[] | null;
 }): ReminderListItem {
   const schedules = row.reminder_schedules ?? [];
   const channelRows = row.reminder_delivery_channels ?? [];
+  const attachmentRows = row.reminder_attachments ?? [];
   const scheduleDateIso = earliestScheduleDate(schedules);
   const times = [
     ...new Set(schedules.flatMap((s) => s.times ?? []).filter(Boolean)),
@@ -119,5 +132,11 @@ export function mapReminderRow(row: {
       .map((c) => c.channel),
     deliveryDetails: details.deliveryDetails,
     cycleEndDetails: details.cycleEndDetails,
+    attachments: attachmentRows.map((item) => ({
+      id: item.id,
+      fileName: item.file_name,
+      mimeType: item.mime_type,
+      sizeBytes: Number(item.size_bytes),
+    })),
   };
 }

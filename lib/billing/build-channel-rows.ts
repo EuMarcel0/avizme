@@ -21,11 +21,14 @@ export function buildChannelRows(input: {
   profilePhone: string | null;
   recipientLists?: RecipientLists;
 }): ChannelRowInsert[] {
-  const { enabledChannels, reminderId, profileEmail, profilePhone } = input;
+  const { enabledChannels, reminderId, profileEmail, profilePhone, billing } =
+    input;
   const lists = input.recipientLists ?? {};
 
   return enabledChannels.map((channel) => {
-    const customList = lists[channel];
+    const customList = input.billing.limits.allowRecipientLists
+      ? lists[channel]
+      : undefined;
     const resolved = resolveDestinationsForChannel({
       channel,
       profileEmail,

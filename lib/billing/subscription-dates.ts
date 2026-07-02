@@ -1,6 +1,6 @@
 import { formatBillingDate } from "@/lib/billing/format-billing-date";
 import type { PlanTier, SubscriptionStatus } from "@/lib/billing/plans";
-import { effectivePlanTier, isPaidPlan } from "@/lib/billing/plans";
+import { hasActiveSubscription } from "@/lib/billing/plans";
 
 export type SubscriptionDatesDisplay = {
   primary: string | null;
@@ -15,8 +15,7 @@ export function buildSubscriptionDatesDisplay(input: {
   cancelAtPeriodEnd: boolean;
   subscriptionEndsAt: string | null;
 }): SubscriptionDatesDisplay | null {
-  const tier = effectivePlanTier(input.planTier, input.subscriptionStatus);
-  if (!isPaidPlan(tier)) return null;
+  if (!hasActiveSubscription(input.subscriptionStatus)) return null;
 
   const periodEnd = input.planPeriodEnd;
   const endsAt = input.subscriptionEndsAt ?? periodEnd;
@@ -41,7 +40,7 @@ export function buildSubscriptionDatesDisplay(input: {
         ? `Período de teste até ${endLabel}`
         : `Período de teste até ${formatBillingDate(periodEnd)}`,
       secondary: isCanceling
-        ? "Depois dessa data o plano volta ao Free, salvo nova assinatura."
+        ? "Depois dessa data você volta ao Pro sem assinatura (limite de 10 lembretes)."
         : "Após o teste, a cobrança mensal começa automaticamente.",
       variant: isCanceling ? "warning" : "default",
     };
@@ -51,7 +50,7 @@ export function buildSubscriptionDatesDisplay(input: {
     return {
       primary: `Seu plano permanece ativo até ${formatBillingDate(endsAt)}`,
       secondary:
-        "A assinatura não será renovada. Depois dessa data você volta ao plano Free.",
+        "A assinatura não será renovada. Depois dessa data você volta ao Pro sem assinatura.",
       variant: "warning",
     };
   }

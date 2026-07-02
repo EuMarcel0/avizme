@@ -212,7 +212,16 @@ export async function updateReminder(
     throw new UpdateReminderError(deleteChannelsError.message, 500);
   }
 
-  const normalizedRecipientLists = normalizeRecipientLists(recipientLists);
+  const normalizedRecipientLists = (() => {
+    try {
+      return normalizeRecipientLists(recipientLists);
+    } catch (error) {
+      throw new UpdateReminderError(
+        error instanceof Error ? error.message : "Destinatários inválidos",
+        400,
+      );
+    }
+  })();
 
   const channelRows = buildChannelRows({
     reminderId,

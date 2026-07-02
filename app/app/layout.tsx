@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { toClientBillingInfo } from "@/lib/billing/client-billing";
 import { getUserBillingContext } from "@/lib/billing/get-user-billing";
-import { PLAN_LIMITS } from "@/lib/billing/plans";
 import { isStripeCheckoutConfigured } from "@/lib/billing/stripe-config";
 import { createClient } from "@/lib/supabase/server";
 import type { AppUser } from "@/lib/users/display-user";
@@ -44,7 +43,7 @@ export default async function AppLayout({
       null,
     avatarUrl: (user.user_metadata?.avatar_url as string | undefined) ?? null,
     planTier: billingContext.planTier,
-    planLabel: PLAN_LIMITS[billingContext.planTier].label,
+    planLabel: billing.planLabel,
   };
 
   return (

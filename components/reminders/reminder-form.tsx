@@ -3,6 +3,7 @@
 import { Form, Formik } from "formik";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { ScheduleModePicker } from "@/components/reminders/schedule-mode-picker";
@@ -11,6 +12,11 @@ import { TimeSlotsEditor } from "@/components/reminders/time-slots-editor";
 import { ButtonLabelSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { DeliveryChannelsField } from "@/components/reminders/delivery-channels-field";
+import {
+  ReminderAttachmentsField,
+  uploadPendingReminderAttachments,
+  type PendingFile,
+} from "@/components/reminders/reminder-attachments-field";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +37,7 @@ import {
 import { toDateString } from "@/lib/reminders/date-utils";
 import { WEEKDAY_LABELS } from "@/lib/reminders/schedule-modes";
 import { newReminderSchema, type NewReminderValues } from "@/lib/validations/reminder";
+import type { ReminderAttachmentRecord } from "@/lib/reminders/reminder-attachments";
 import { cn } from "@/lib/utils";
 
 export const DEFAULT_REMINDER_FORM_VALUES: NewReminderValues = {
@@ -83,6 +90,7 @@ type ReminderFormProps = {
   userEmail?: string | null;
   userPhone?: string | null;
   billing?: ClientBillingInfo;
+  initialAttachments?: ReminderAttachmentRecord[];
 };
 
 export function ReminderForm({
@@ -91,11 +99,15 @@ export function ReminderForm({
   userEmail,
   userPhone,
   billing,
+  initialAttachments = [],
 }: ReminderFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { closeModal } = useModal();
   const isEdit = Boolean(reminderId);
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+  const [existingAttachments, setExistingAttachments] =
+    useState<ReminderAttachmentRecord[]>(initialAttachments);
 
   return (
     <Formik
@@ -143,12 +155,31 @@ export function ReminderForm({
           ? await updateReminderAction(reminderId!, payload)
           : await createReminderAction(payload);
 
-        setSubmitting(false);
-
         if (!result.ok) {
+          setSubmitting(false);
           toast.error(result.error);
           return;
         }
+
+        if (pendingFiles.length > 0) {
+          let targetReminderId: string | null = isEdit ? reminderId! : null;
+          if (!isEdit && result.ok) {
+            targetReminderId = (result as { ok: true; id: string }).id;
+          }
+          if (targetReminderId) {
+            const uploaded = await uploadPendingReminderAttachments(
+              targetReminderId,
+              pendingFiles,
+            );
+            if (!uploaded) {
+              setSubmitting(false);
+              return;
+            }
+            setPendingFiles([]);
+          }
+        }
+
+        setSubmitting(false);
 
         toast.success(
           isEdit ? "Lembrete atualizado." : "Lembrete criado com sucesso!",
@@ -407,6 +438,14 @@ export function ReminderForm({
                   onRecipientListChange={(channel, recipients) =>
                     setFieldValue(`recipientLists.${channel}`, recipients)
                   }
+                />
+
+                <ReminderAttachmentsField
+                  reminderId={reminderId}
+                  existingAttachments={existingAttachments}
+                  pendingFiles={pendingFiles}
+                  onPendingFilesChange={setPendingFiles}
+                  onExistingAttachmentsChange={setExistingAttachments}
                 />
               </section>
             </div>

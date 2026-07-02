@@ -413,6 +413,19 @@ BEGIN
           )
           FROM public.reminder_delivery_channels dc
           WHERE dc.reminder_id = r.id
+        ), '[]'::jsonb),
+        'reminder_attachments', COALESCE((
+          SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', ra.id,
+              'file_name', ra.file_name,
+              'mime_type', ra.mime_type,
+              'size_bytes', ra.size_bytes
+            )
+            ORDER BY ra.created_at
+          )
+          FROM public.reminder_attachments ra
+          WHERE ra.reminder_id = r.id
         ), '[]'::jsonb)
       ) AS row_data
       FROM paged p

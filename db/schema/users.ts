@@ -6,7 +6,7 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   fullName: text("full_name"),
   phone: text("phone"),
-  planTier: planTierEnum("plan_tier").default("free").notNull(),
+  planTier: planTierEnum("plan_tier").default("pro").notNull(),
   subscriptionStatus: subscriptionStatusEnum("subscription_status")
     .default("none")
     .notNull(),

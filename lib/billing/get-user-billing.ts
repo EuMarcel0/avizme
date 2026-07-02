@@ -3,8 +3,9 @@ import "server-only";
 import { formatInTimeZone } from "date-fns-tz";
 
 import {
-  effectivePlanTier,
-  PLAN_LIMITS,
+  hasActiveSubscription,
+  normalizeStoredPlanTier,
+  resolvePlanLimits,
   type PlanTier,
   type SubscriptionStatus,
 } from "@/lib/billing/plans";
@@ -13,6 +14,7 @@ import type { DeliveryChannel } from "@/lib/scheduling/types";
 import { isMissingSubscriptionDatesColumnsError } from "@/lib/billing/subscription-period-fields";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PlanLimits } from "@/lib/billing/plans";
 
 const APP_TIMEZONE = "America/Sao_Paulo";
 
@@ -21,10 +23,11 @@ export type UserBillingContext = {
   planTier: PlanTier;
   rawPlanTier: PlanTier;
   subscriptionStatus: SubscriptionStatus;
+  hasActiveSubscription: boolean;
   planPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
   subscriptionEndsAt: string | null;
-  limits: (typeof PLAN_LIMITS)[PlanTier];
+  limits: PlanLimits;
   usage: {
     emailToday: number;
     smsThisMonth: number;
@@ -87,11 +90,13 @@ export async function getUserBillingContext(
 ): Promise<UserBillingContext> {
   const { data: profile } = await fetchBillingProfile(supabase, userId);
 
-  const rawPlanTier = (profile?.plan_tier ?? "free") as PlanTier;
+  const rawPlanTier = normalizeStoredPlanTier(
+    profile?.plan_tier as string | null | undefined,
+  );
   const subscriptionStatus = (profile?.subscription_status ??
     "none") as SubscriptionStatus;
-  const planTier = effectivePlanTier(rawPlanTier, subscriptionStatus);
-  const limits = PLAN_LIMITS[planTier];
+  const active = hasActiveSubscription(subscriptionStatus);
+  const limits = resolvePlanLimits(rawPlanTier, subscriptionStatus);
   const planPeriodEnd = (profile?.plan_period_end as string | null) ?? null;
   const cancelAtPeriodEnd =
     "subscription_cancel_at_period_end" in (profile ?? {})
@@ -110,18 +115,18 @@ export async function getUserBillingContext(
 
   const [{ data: usageRows }, { count: activeReminders }, usageFromOccurrences] =
     await Promise.all([
-    supabase
-      .from("user_usage_counters")
-      .select("period_key, channel, count")
-      .eq("user_id", userId)
-      .in("period_key", [emailKey, smsKey, whatsappKey]),
-    supabase
-      .from("reminders")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .in("status", ["active", "paused"]),
-    countUsageFromOccurrences(supabase, userId),
-  ]);
+      supabase
+        .from("user_usage_counters")
+        .select("period_key, channel, count")
+        .eq("user_id", userId)
+        .in("period_key", [emailKey, smsKey, whatsappKey]),
+      supabase
+        .from("reminders")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .in("status", ["active", "paused"]),
+      countUsageFromOccurrences(supabase, userId),
+    ]);
 
   const usageByKey = new Map<string, number>();
   for (const row of usageRows ?? []) {
@@ -137,9 +142,10 @@ export async function getUserBillingContext(
 
   return {
     userId,
-    planTier,
+    planTier: rawPlanTier,
     rawPlanTier,
     subscriptionStatus,
+    hasActiveSubscription: active,
     planPeriodEnd,
     cancelAtPeriodEnd,
     subscriptionEndsAt,

@@ -21,6 +21,7 @@ import type { ClientBillingInfo } from "@/lib/billing/client-billing";
 import { getPlanFeatures, PLAN_LIMITS, type PlanTier } from "@/lib/billing/plans";
 import { cn } from "@/lib/utils";
 import { CalendarClock } from "lucide-react";
+
 type PlansViewProps = {
   billing: ClientBillingInfo;
   setupHint?: string | null;
@@ -28,11 +29,11 @@ type PlansViewProps = {
 };
 
 const PAID_PLANS: Array<{
-  tier: Exclude<PlanTier, "free">;
+  tier: PlanTier;
   highlight?: boolean;
 }> = [
   { tier: "pro" },
-  { tier: "business", highlight: true },
+  { tier: "premium", highlight: true },
 ];
 
 export function PlansView({ billing, setupHint, webhookHint }: PlansViewProps) {
@@ -43,7 +44,7 @@ export function PlansView({ billing, setupHint, webhookHint }: PlansViewProps) {
   const canceled = searchParams.get("canceled");
   const error = searchParams.get("error");
 
-  async function handleUpgrade(plan: Exclude<PlanTier, "free">) {
+  async function handleUpgrade(plan: PlanTier) {
     setLoadingPlan(plan);
     const result = await createCheckoutSessionAction(plan);
     setLoadingPlan(null);
@@ -69,6 +70,11 @@ export function PlansView({ billing, setupHint, webhookHint }: PlansViewProps) {
           {billing.subscriptionStatus === "past_due" && (
             <Badge variant="destructive" className="ml-2">
               Pagamento pendente
+            </Badge>
+          )}
+          {!billing.hasActiveSubscription && (
+            <Badge variant="outline" className="ml-2">
+              Sem assinatura
             </Badge>
           )}
         </p>
@@ -122,22 +128,24 @@ export function PlansView({ billing, setupHint, webhookHint }: PlansViewProps) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <PlanCard
-          tier="free"
-          current={billing.planTier === "free"}
-          features={getPlanFeatures("free")}
-        />
+      {!billing.hasActiveSubscription && (
+        <div className="rounded-lg border border-border/80 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          Sem assinatura ativa, você pode criar até{" "}
+          {billing.limits.maxActiveReminders} lembretes e enviar apenas por
+          e-mail. Assine o Pro para SMS, WhatsApp e destinatários extras.
+        </div>
+      )}
 
+      <div className="grid gap-4 md:grid-cols-2">
         {PAID_PLANS.map(({ tier, highlight }) => (
           <PlanCard
             key={tier}
             tier={tier}
-            current={billing.planTier === tier}
+            current={billing.planTier === tier && billing.hasActiveSubscription}
             highlight={highlight}
             features={getPlanFeatures(tier)}
             action={
-              billing.planTier === tier ? (
+              billing.planTier === tier && billing.hasActiveSubscription ? (
                 billing.stripeEnabled ? (
                   <form action="/api/billing/portal" method="post" className="w-full">
                     <Button type="submit" variant="outline" className="w-full">
@@ -149,7 +157,7 @@ export function PlansView({ billing, setupHint, webhookHint }: PlansViewProps) {
                 <Button
                   type="button"
                   className="w-full"
-                  variant="default"
+                  variant={highlight ? "default" : "outline"}
                   disabled={!billing.stripeEnabled || loadingPlan !== null}
                   onClick={() => handleUpgrade(tier)}
                 >

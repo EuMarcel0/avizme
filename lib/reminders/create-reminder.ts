@@ -162,7 +162,16 @@ export async function createReminder(
     throw new CreateReminderError(schedulesError.message, 500);
   }
 
-  const normalizedRecipientLists = normalizeRecipientLists(recipientLists);
+  const normalizedRecipientLists = (() => {
+    try {
+      return normalizeRecipientLists(recipientLists);
+    } catch (error) {
+      throw new CreateReminderError(
+        error instanceof Error ? error.message : "Destinatários inválidos",
+        400,
+      );
+    }
+  })();
 
   const channelRows = buildChannelRows({
     reminderId: reminder.id,

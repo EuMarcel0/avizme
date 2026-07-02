@@ -17,23 +17,27 @@ export function getStripe(): Stripe {
   return stripeClient;
 }
 
+function premiumPriceId(): string | undefined {
+  return env.stripePricePremium ?? env.stripePriceBusiness;
+}
+
 export function isStripeCheckoutConfigured(): boolean {
+  const premium = premiumPriceId();
   return Boolean(
     env.stripeSecretKey &&
       env.stripePricePro &&
-      env.stripePriceBusiness &&
+      premium &&
       env.stripePricePro.startsWith("price_") &&
-      env.stripePriceBusiness.startsWith("price_"),
+      premium.startsWith("price_"),
   );
 }
 
-/** Checkout + webhook completo (sync automático do plano). */
 export function isStripeConfigured(): boolean {
   return Boolean(isStripeCheckoutConfigured() && env.stripeWebhookSecret);
 }
 
 function stripePriceHint(
-  name: "STRIPE_PRICE_PRO" | "STRIPE_PRICE_BUSINESS",
+  name: string,
   value: string | undefined,
 ): string | null {
   if (!value) {
@@ -46,22 +50,20 @@ function stripePriceHint(
   return null;
 }
 
-/** Bloqueia checkout — preços ou secret ausentes/inválidos. */
 export function stripeSetupHint(): string | null {
   if (!env.stripeSecretKey) {
     return "Adicione STRIPE_SECRET_KEY (sk_test_...) no .env ou na Vercel.";
   }
   const proHint = stripePriceHint("STRIPE_PRICE_PRO", env.stripePricePro);
   if (proHint) return proHint;
-  const businessHint = stripePriceHint(
-    "STRIPE_PRICE_BUSINESS",
-    env.stripePriceBusiness,
+  const premiumHint = stripePriceHint(
+    "STRIPE_PRICE_PREMIUM (ou STRIPE_PRICE_BUSINESS)",
+    premiumPriceId(),
   );
-  if (businessHint) return businessHint;
+  if (premiumHint) return premiumHint;
   return null;
 }
 
-/** Opcional — checkout funciona; webhook melhora sync automático do plano. */
 export function stripeWebhookHint(): string | null {
   if (!isStripeCheckoutConfigured() || env.stripeWebhookSecret) {
     return null;
@@ -71,17 +73,19 @@ export function stripeWebhookHint(): string | null {
 
 export function planTierFromPriceId(priceId: string): PlanTier | null {
   if (priceId === env.stripePricePro) return "pro";
-  if (priceId === env.stripePriceBusiness) return "business";
+  const premium = premiumPriceId();
+  if (premium && priceId === premium) return "premium";
   return null;
 }
 
-export function priceIdForPlan(plan: Exclude<PlanTier, "free">): string {
+export function priceIdForPlan(plan: PlanTier): string {
   if (plan === "pro") {
     if (!env.stripePricePro) throw new Error("STRIPE_PRICE_PRO não configurada");
     return env.stripePricePro;
   }
-  if (!env.stripePriceBusiness) {
-    throw new Error("STRIPE_PRICE_BUSINESS não configurada");
+  const premium = premiumPriceId();
+  if (!premium) {
+    throw new Error("STRIPE_PRICE_PREMIUM não configurada");
   }
-  return env.stripePriceBusiness;
+  return premium;
 }

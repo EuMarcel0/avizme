@@ -4,6 +4,7 @@ import { isBillingEnforced } from "@/lib/billing/is-billing-enforced";
 import {
   channelAllowedForPlan,
   scheduleModeAllowedForPlan,
+  type PlanLimits,
 } from "@/lib/billing/plans";
 import type { UserBillingContext } from "@/lib/billing/get-user-billing";
 import type { ScheduleMode } from "@/lib/reminders/build-schedules";
@@ -68,7 +69,7 @@ export function assertChannelsAllowedForPlan(
   }
 
   for (const channel of selected) {
-    if (!channelAllowedForPlan(billing.planTier, channel)) {
+    if (!channelAllowedForPlan(billing.limits, channel)) {
       const label =
         channel === "email"
           ? "E-mail"
@@ -76,7 +77,7 @@ export function assertChannelsAllowedForPlan(
             ? "SMS"
             : "WhatsApp";
       throw new BillingLimitError(
-        `${label} não está disponível no plano ${billing.limits.label}. Faça upgrade em Plano e cobrança.`,
+        `${label} exige assinatura Pro ou Premium ativa. Veja Plano e cobrança.`,
         "channel_not_allowed",
       );
     }
@@ -88,9 +89,9 @@ export function assertScheduleModeAllowed(
   mode: ScheduleMode,
 ): void {
   if (!isBillingEnforced()) return;
-  if (!scheduleModeAllowedForPlan(billing.planTier, mode)) {
+  if (!scheduleModeAllowedForPlan(billing.limits, mode)) {
     throw new BillingLimitError(
-      `"${scheduleModeLabel(mode)}" não está disponível no plano ${billing.limits.label}. No Free, use apenas "Uma vez". Faça upgrade em Plano e cobrança.`,
+      `"${scheduleModeLabel(mode)}" não está disponível no seu plano. Faça upgrade em Plano e cobrança.`,
       "schedule_mode",
     );
   }
@@ -103,7 +104,7 @@ export function assertActiveReminderLimit(
   if (!isNewReminder) return;
   if (billing.usage.activeReminders >= billing.limits.maxActiveReminders) {
     throw new BillingLimitError(
-      `Limite de ${billing.limits.maxActiveReminders} lembretes ativos no plano ${billing.limits.label}. Faça upgrade ou arquive lembretes antigos.`,
+      `Limite de ${billing.limits.maxActiveReminders} lembretes no plano ${billing.limits.label}. Assine o Pro ou arquive lembretes antigos.`,
       "active_reminders",
     );
   }
@@ -122,7 +123,7 @@ export function assertRecipientListsAllowed(
   if (hasCustomLists && !billing.limits.allowRecipientLists) {
     if (!isBillingEnforced()) return;
     throw new BillingLimitError(
-      "Listas de destinatários estão disponíveis apenas no plano Business.",
+      "Destinatários extras exigem assinatura Pro ou Premium ativa.",
       "recipient_list",
     );
   }
@@ -135,7 +136,7 @@ export function assertRecipientListsAllowed(
         "recipient_list",
       );
     }
-    if (!channelAllowedForPlan(billing.planTier, channel as DeliveryChannel)) {
+    if (!channelAllowedForPlan(billing.limits, channel as DeliveryChannel)) {
       throw new BillingLimitError(
         `Canal ${channel} não permitido no seu plano.`,
         "channel_not_allowed",
@@ -149,9 +150,9 @@ export function assertDispatchQuota(
   channel: DeliveryChannel,
   sendCount = 1,
 ): { allowed: boolean; reason?: string } {
-  const { limits, usage, planTier } = billing;
+  const { limits, usage } = billing;
 
-  if (!channelAllowedForPlan(planTier, channel)) {
+  if (!channelAllowedForPlan(limits, channel)) {
     return {
       allowed: false,
       reason: `Canal ${channel} não permitido no plano ${limits.label}`,
@@ -162,14 +163,17 @@ export function assertDispatchQuota(
     if (usage.emailToday + sendCount > limits.emailsPerDay) {
       return {
         allowed: false,
-        reason: `Limite diário de ${limits.emailsPerDay} e-mails no plano Free`,
+        reason: `Limite diário de ${limits.emailsPerDay} e-mails no plano ${limits.label}`,
       };
     }
   }
 
   if (channel === "sms" && limits.smsPerMonth !== null) {
     if (limits.smsPerMonth === 0) {
-      return { allowed: false, reason: "SMS não incluído no plano Free" };
+      return {
+        allowed: false,
+        reason: "SMS exige assinatura Pro ou Premium ativa.",
+      };
     }
     if (usage.smsThisMonth + sendCount > limits.smsPerMonth) {
       return {
@@ -183,7 +187,7 @@ export function assertDispatchQuota(
     if (limits.whatsappPerMonth === 0) {
       return {
         allowed: false,
-        reason: "WhatsApp não incluído no plano Free",
+        reason: "WhatsApp exige assinatura Pro ou Premium ativa.",
       };
     }
     if (usage.whatsappThisMonth + sendCount > limits.whatsappPerMonth) {
@@ -196,3 +200,5 @@ export function assertDispatchQuota(
 
   return { allowed: true };
 }
+
+export type { PlanLimits };

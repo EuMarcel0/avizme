@@ -22,7 +22,7 @@ export type BillingActionResult =
   | { ok: false; error: string };
 
 export async function createCheckoutSessionAction(
-  plan: Exclude<PlanTier, "free">,
+  plan: PlanTier,
 ): Promise<BillingActionResult> {
   if (!isStripeCheckoutConfigured()) {
     return {
@@ -125,7 +125,7 @@ export async function createBillingPortalAction(): Promise<BillingActionResult> 
 }
 
 export async function redirectToCheckoutAction(
-  plan: Exclude<PlanTier, "free">,
+  plan: PlanTier,
 ): Promise<void> {
   const result = await createCheckoutSessionAction(plan);
   if (!result.ok) {

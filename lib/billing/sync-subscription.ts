@@ -2,7 +2,11 @@ import "server-only";
 
 import type Stripe from "stripe";
 
-import type { PlanTier, SubscriptionStatus } from "@/lib/billing/plans";
+import {
+  normalizeStoredPlanTier,
+  type PlanTier,
+  type SubscriptionStatus,
+} from "@/lib/billing/plans";
 import { persistUserBilling, persistUserBillingDowngrade } from "@/lib/billing/persist-user-billing";
 import { extractSubscriptionPeriodFields } from "@/lib/billing/subscription-period-fields";
 import { planTierFromPriceId } from "@/lib/billing/stripe-config";
@@ -35,15 +39,17 @@ export async function syncSubscriptionFromStripe(
       : subscription.customer.id;
 
   const priceId = subscription.items.data[0]?.price.id;
-  const metaPlan = subscription.metadata?.plan_tier as PlanTier | undefined;
+  const metaPlan = subscription.metadata?.plan_tier
+    ? normalizeStoredPlanTier(subscription.metadata.plan_tier)
+    : undefined;
   const fromPrice = priceId ? planTierFromPriceId(priceId) : null;
-  const planTier: PlanTier = fromPrice ?? metaPlan ?? "free";
+  const planTier: PlanTier = fromPrice ?? metaPlan ?? "pro";
 
   if (priceId && !fromPrice) {
     console.warn(
       "[billing:sync] price ID não mapeado no .env:",
       priceId,
-      "— confira STRIPE_PRICE_PRO / STRIPE_PRICE_BUSINESS",
+      "— confira STRIPE_PRICE_PRO / STRIPE_PRICE_PREMIUM",
     );
   }
 
@@ -79,11 +85,11 @@ export async function syncSubscriptionFromStripe(
   }
 
   const effectiveTier =
-    subscriptionStatus === "active" || subscriptionStatus === "trialing"
+    subscriptionStatus === "active" ||
+    subscriptionStatus === "trialing" ||
+    subscriptionStatus === "past_due"
       ? planTier
-      : subscriptionStatus === "past_due"
-        ? planTier
-        : "free";
+      : "pro";
 
   const effectiveStatus =
     subscriptionStatus === "canceled" ? "none" : subscriptionStatus;
