@@ -1,6 +1,6 @@
 import type { RecipientLists } from "@/lib/billing/enforce-limits";
 import { toE164Brazil } from "@/lib/phone/to-e164-brazil";
-import { isValidBrazilPhone, phoneDigits } from "@/lib/phone/format-brazil-phone";
+import { phoneDigits } from "@/lib/phone/format-brazil-phone";
 import type { DeliveryChannel } from "@/lib/scheduling/types";
 
 function normalizeEmail(value: string): string {
@@ -45,14 +45,13 @@ export function normalizeRecipientLists(
     .filter(Boolean);
 
   const normalizePhones = (items: (string | undefined)[] | undefined) =>
-    (items ?? []).map((value) => {
-      const raw = String(value ?? "").trim();
-      if (!raw) return null;
-      if (!isValidBrazilPhone(raw)) {
-        throw new Error(`Telefone inválido: ${raw}`);
-      }
-      return normalizeStoredDestination("sms", raw);
-    }).filter((p): p is string => Boolean(p));
+    (items ?? [])
+      .map((value) => {
+        const raw = String(value ?? "").trim();
+        if (!raw) return null;
+        return normalizeStoredDestination("sms", raw);
+      })
+      .filter((p): p is string => Boolean(p));
 
   return {
     email,
