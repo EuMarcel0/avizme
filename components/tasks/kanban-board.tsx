@@ -36,7 +36,7 @@ import {
   reorderColumnsAction,
   updateColumnAction,
 } from "@/app/actions/tasks";
-import { FolderNameForm } from "@/components/notes/folder-name-form";
+import { ColumnForm } from "@/components/tasks/column-form";
 import { TaskModalForm } from "@/components/tasks/task-modal-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -258,16 +258,16 @@ export function KanbanBoard() {
     if (!board) return;
     openModal({
       title: "Nova coluna",
-      description: "Adicione um status ao quadro.",
+      description: "Defina o nome e a cor do status.",
       className: "w-[min(96vw,24rem)] max-w-[min(96vw,24rem)]",
       content: (
-        <FolderNameForm
+        <ColumnForm
           submitLabel="Criar coluna"
-          placeholder="Ex.: Em revisão, Bloqueado…"
-          onSubmit={async (name) => {
+          onSubmit={async ({ name, color }) => {
             const result = await createColumnAction({
               boardId: board.id,
               name,
+              color,
             });
             if (!result.ok) return result.error;
             setColumns((prev) => [...prev, result.data]);
@@ -281,26 +281,27 @@ export function KanbanBoard() {
 
   const handleRenameColumn = (column: TaskColumn) => {
     openModal({
-      title: "Renomear coluna",
-      description: "Escolha um novo nome para a coluna.",
+      title: "Editar coluna",
+      description: "Atualize o nome ou a cor da coluna.",
       className: "w-[min(96vw,24rem)] max-w-[min(96vw,24rem)]",
       content: (
-        <FolderNameForm
+        <ColumnForm
           initialName={column.name}
+          initialColor={column.color}
           submitLabel="Salvar"
-          placeholder="Nome da coluna"
-          onSubmit={async (name) => {
+          onSubmit={async ({ name, color }) => {
             const result = await updateColumnAction({
               id: column.id,
               name,
+              color,
             });
             if (!result.ok) return result.error;
             setColumns((prev) =>
               prev.map((c) =>
-                c.id === column.id ? { ...c, name } : c,
+                c.id === column.id ? { ...c, name, color } : c,
               ),
             );
-            toast.success("Coluna renomeada");
+            toast.success("Coluna atualizada");
             return null;
           }}
         />
@@ -482,7 +483,7 @@ function KanbanColumn({
             <MoreHorizontal className="size-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onRename}>Renomear</DropdownMenuItem>
+            <DropdownMenuItem onClick={onRename}>Editar</DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onClick={onDelete}>
               Excluir
             </DropdownMenuItem>
