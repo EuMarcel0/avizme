@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CreditCard, History } from "lucide-react";
+import { Bell, CreditCard, History, NotebookPen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -15,6 +15,12 @@ const navItems = [
     label: "Lembretes",
     icon: Bell,
     exact: true,
+  },
+  {
+    href: "/app/anotacoes",
+    label: "Anotações e tarefas",
+    icon: NotebookPen,
+    exact: false,
   },
   {
     href: "/app/historico",
