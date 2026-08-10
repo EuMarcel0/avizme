@@ -30,27 +30,18 @@ export function WorkspaceInvitePanel({
   isGuest,
 }: WorkspaceInvitePanelProps) {
   const { openModal, closeModal } = useModal();
-  const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [invites, setInvites] = useState<WorkspaceInvite[]>([]);
+  const [peopleCount, setPeopleCount] = useState(0);
   const [revokeId, setRevokeId] = useState<string | null>(null);
   const [removeId, setRemoveId] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const refreshCount = useCallback(async () => {
     const result = await listWorkspacePeopleAction();
-    if (!result.ok) {
-      toast.error(result.error);
-      return { members: [] as WorkspaceMember[], invites: [] as WorkspaceInvite[] };
-    }
-    const nextMembers = result.data.members;
-    const nextInvites = result.data.invites.filter((i) => i.status === "pending");
-    setMembers(nextMembers);
-    setInvites(nextInvites);
-    return { members: nextMembers, invites: nextInvites };
+    if (!result.ok) return;
+    const pendingInvites = result.data.invites.filter(
+      (i) => i.status === "pending",
+    );
+    setPeopleCount(result.data.members.length + pendingInvites.length);
   }, []);
-
-  useEffect(() => {
-    if (!isGuest) void load();
-  }, [isGuest, load]);
 
   if (isGuest) {
     return (
@@ -60,8 +51,7 @@ export function WorkspaceInvitePanel({
     );
   }
 
-  const openInviteModal = async () => {
-    const data = await load();
+  const openInviteModal = () => {
     openModal({
       title: "Convidar pessoas",
       description:
@@ -70,10 +60,8 @@ export function WorkspaceInvitePanel({
       content: (
         <InviteModalContent
           canInvite={canInvite}
-          initialMembers={data.members}
-          initialInvites={data.invites}
-          onDone={async () => {
-            await load();
+          onPeopleChanged={() => {
+            void refreshCount();
           }}
           onClose={closeModal}
           onRequestRemove={(id) => {
@@ -94,9 +82,9 @@ export function WorkspaceInvitePanel({
       <Button type="button" variant="outline" size="sm" onClick={openInviteModal}>
         <Users className="size-3.5" />
         Convidar pessoas
-        {members.length + invites.length > 0 ? (
+        {peopleCount > 0 ? (
           <span className="ml-1 rounded-full bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground">
-            {members.length + invites.length}
+            {peopleCount}
           </span>
         ) : null}
       </Button>
@@ -118,7 +106,7 @@ export function WorkspaceInvitePanel({
             return;
           }
           setRevokeId(null);
-          void load();
+          void refreshCount();
           toast.success("Convite revogado");
         }}
       />
@@ -140,7 +128,7 @@ export function WorkspaceInvitePanel({
             return;
           }
           setRemoveId(null);
-          void load();
+          void refreshCount();
           toast.success("Membro removido");
         }}
       />
@@ -150,25 +138,43 @@ export function WorkspaceInvitePanel({
 
 function InviteModalContent({
   canInvite,
-  initialMembers,
-  initialInvites,
-  onDone,
+  onPeopleChanged,
   onClose,
   onRequestRemove,
   onRequestRevoke,
 }: {
   canInvite: boolean;
-  initialMembers: WorkspaceMember[];
-  initialInvites: WorkspaceInvite[];
-  onDone: () => Promise<void>;
+  onPeopleChanged: () => void;
   onClose: () => void;
   onRequestRemove: (id: string) => void;
   onRequestRevoke: (id: string) => void;
 }) {
   const [emails, setEmails] = useState<string[]>([]);
-  const [members, setMembers] = useState(initialMembers);
-  const [invites, setInvites] = useState(initialInvites);
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [invites, setInvites] = useState<WorkspaceInvite[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setLoadingList(true);
+      const result = await listWorkspacePeopleAction();
+      if (cancelled) return;
+      setLoadingList(false);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      setMembers(result.data.members);
+      setInvites(result.data.invites.filter((i) => i.status === "pending"));
+      onPeopleChanged();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- carrega uma vez ao montar o modal
+  }, []);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -197,61 +203,67 @@ function InviteModalContent({
           </div>
         )}
 
-        {members.length > 0 ? (
-          <div>
-            <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Membros
-            </p>
-            <ul className="space-y-1">
-              {members.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40"
-                >
-                  <span className="truncate">
-                    {m.full_name || m.email || m.member_user_id}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label="Remover membro"
-                    onClick={() => onRequestRemove(m.id)}
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        {loadingList ? (
+          <p className="text-xs text-muted-foreground">Carregando pessoas…</p>
+        ) : (
+          <>
+            {members.length > 0 ? (
+              <div>
+                <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Membros
+                </p>
+                <ul className="space-y-1">
+                  {members.map((m) => (
+                    <li
+                      key={m.id}
+                      className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40"
+                    >
+                      <span className="truncate">
+                        {m.full_name || m.email || m.member_user_id}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Remover membro"
+                        onClick={() => onRequestRemove(m.id)}
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
-        {invites.length > 0 ? (
-          <div>
-            <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Convites pendentes
-            </p>
-            <ul className="space-y-1">
-              {invites.map((inv) => (
-                <li
-                  key={inv.id}
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40"
-                >
-                  <span className="truncate">{inv.email}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label="Revogar convite"
-                    onClick={() => onRequestRevoke(inv.id)}
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+            {invites.length > 0 ? (
+              <div>
+                <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Convites pendentes
+                </p>
+                <ul className="space-y-1">
+                  {invites.map((inv) => (
+                    <li
+                      key={inv.id}
+                      className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40"
+                    >
+                      <span className="truncate">{inv.email}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Revogar convite"
+                        onClick={() => onRequestRevoke(inv.id)}
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
 
       <div className="flex justify-end gap-2 border-t border-border/60 px-5 py-3">
@@ -283,7 +295,6 @@ function InviteModalContent({
                   );
                 }
                 setEmails([]);
-                await onDone();
                 const refreshed = await listWorkspacePeopleAction();
                 if (refreshed.ok) {
                   setMembers(refreshed.data.members);
@@ -291,6 +302,7 @@ function InviteModalContent({
                     refreshed.data.invites.filter((i) => i.status === "pending"),
                   );
                 }
+                onPeopleChanged();
               });
             }}
           >
