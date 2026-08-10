@@ -34,7 +34,13 @@ function planBadgeClass(tier: PlanTier | undefined): string {
   }
 }
 
-export function UserMenu({ user }: { user: AppUser }) {
+export function UserMenu({
+  user,
+  guestOnly = false,
+}: {
+  user: AppUser;
+  guestOnly?: boolean;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const displayName = getDisplayName(user);
@@ -72,22 +78,30 @@ export function UserMenu({ user }: { user: AppUser }) {
             <p className="truncate text-xs text-muted-foreground">
               {user.email}
             </p>
-            <Badge
-              variant="outline"
-              className={cn("mt-2 font-medium", planBadgeClass(user.planTier))}
-            >
-              Plano {planLabel}
-            </Badge>
+            {!guestOnly ? (
+              <Badge
+                variant="outline"
+                className={cn("mt-2 font-medium", planBadgeClass(user.planTier))}
+              >
+                Plano {planLabel}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="mt-2 font-medium">
+                Convidado
+              </Badge>
+            )}
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={() => router.push("/app/plano")}
-        >
-          <CreditCard className="size-4" />
-          Plano e cobrança
-        </DropdownMenuItem>
+        {!guestOnly ? (
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => router.push("/app/plano")}
+          >
+            <CreditCard className="size-4" />
+            Plano e cobrança
+          </DropdownMenuItem>
+        ) : null}
         <ThemeMenuItem />
         <DropdownMenuSeparator />
         <DropdownMenuItem

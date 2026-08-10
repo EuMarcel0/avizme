@@ -14,12 +14,14 @@ export function AppShell({
   userEmail,
   userPhone,
   billing,
+  guestOnly = false,
   children,
 }: {
   user: AppUser;
   userEmail?: string | null;
   userPhone?: string | null;
   billing?: ClientBillingInfo;
+  guestOnly?: boolean;
   children: React.ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -30,7 +32,7 @@ export function AppShell({
         <CheckoutReturnHandler />
       </Suspense>
       <div className="flex h-dvh min-h-0 overflow-hidden bg-white dark:bg-zinc-950">
-        <AppSidebar />
+        <AppSidebar guestOnly={guestOnly} />
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <AppHeader
@@ -38,6 +40,7 @@ export function AppShell({
             userEmail={userEmail}
             userPhone={userPhone}
             billing={billing}
+            guestOnly={guestOnly}
             mobileNavOpen={mobileNavOpen}
             onMobileNavOpenChange={setMobileNavOpen}
           />

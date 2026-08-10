@@ -1,8 +1,8 @@
 import "server-only";
 
-import { requireAuthenticatedUser } from "@/lib/reminders/require-auth";
-import { createClient } from "@/lib/supabase/server";
 import type { TaskTag } from "@/db/schema/tasks";
+import { createClient } from "@/lib/supabase/server";
+import { resolveWorkspaceAccess } from "@/lib/workspace/workspace";
 
 export type TaskPriority = "none" | "low" | "medium" | "high";
 
@@ -62,12 +62,12 @@ const DEFAULT_COLUMNS = [
 
 export async function getOrCreateBoard(): Promise<BoardSnapshot> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   let { data: board, error: boardError } = await supabase
     .from("task_boards")
     .select("id, name, created_at, updated_at")
-    .eq("user_id", user.id)
+    .eq("user_id", ownerUserId)
     .maybeSingle();
 
   if (boardError) throw new TasksError(boardError.message);
@@ -75,7 +75,7 @@ export async function getOrCreateBoard(): Promise<BoardSnapshot> {
   if (!board) {
     const created = await supabase
       .from("task_boards")
-      .insert({ user_id: user.id, name: "Meu quadro" })
+      .insert({ user_id: ownerUserId, name: "Meu quadro" })
       .select("id, name, created_at, updated_at")
       .single();
 
@@ -132,11 +132,11 @@ export async function createColumn(input: {
   color?: string;
 }): Promise<TaskColumn> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
   const trimmed = input.name.trim();
   if (!trimmed) throw new TasksError("Nome da coluna é obrigatório", 400);
 
-  await assertBoardOwned(supabase, input.boardId, user.id);
+  await assertBoardOwned(supabase, input.boardId, ownerUserId);
 
   const { count } = await supabase
     .from("task_columns")
@@ -164,7 +164,7 @@ export async function updateColumn(input: {
   color?: string;
 }): Promise<void> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const { data: col } = await supabase
     .from("task_columns")
@@ -172,7 +172,7 @@ export async function updateColumn(input: {
     .eq("id", input.id)
     .maybeSingle();
   if (!col) throw new TasksError("Coluna não encontrada", 404);
-  await assertBoardOwned(supabase, col.board_id, user.id);
+  await assertBoardOwned(supabase, col.board_id, ownerUserId);
 
   const patch: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
@@ -194,7 +194,7 @@ export async function updateColumn(input: {
 
 export async function deleteColumn(columnId: string): Promise<void> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const { data: col } = await supabase
     .from("task_columns")
@@ -202,7 +202,7 @@ export async function deleteColumn(columnId: string): Promise<void> {
     .eq("id", columnId)
     .maybeSingle();
   if (!col) throw new TasksError("Coluna não encontrada", 404);
-  await assertBoardOwned(supabase, col.board_id, user.id);
+  await assertBoardOwned(supabase, col.board_id, ownerUserId);
 
   const { count } = await supabase
     .from("task_columns")
@@ -226,8 +226,8 @@ export async function reorderColumns(
   orderedIds: string[],
 ): Promise<void> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
-  await assertBoardOwned(supabase, boardId, user.id);
+  const { ownerUserId } = await resolveWorkspaceAccess();
+  await assertBoardOwned(supabase, boardId, ownerUserId);
 
   await Promise.all(
     orderedIds.map((id, index) =>
@@ -254,8 +254,8 @@ export type UpsertTaskInput = {
 
 export async function upsertTask(input: UpsertTaskInput): Promise<Task> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
-  await assertBoardOwned(supabase, input.boardId, user.id);
+  const { ownerUserId } = await resolveWorkspaceAccess();
+  await assertBoardOwned(supabase, input.boardId, ownerUserId);
 
   const title = input.title.trim();
   if (!title) throw new TasksError("Título é obrigatório", 400);
@@ -317,7 +317,7 @@ export async function upsertTask(input: UpsertTaskInput): Promise<Task> {
 
 export async function deleteTask(taskId: string): Promise<void> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const { data: task } = await supabase
     .from("tasks")
@@ -325,7 +325,7 @@ export async function deleteTask(taskId: string): Promise<void> {
     .eq("id", taskId)
     .maybeSingle();
   if (!task) throw new TasksError("Tarefa não encontrada", 404);
-  await assertBoardOwned(supabase, task.board_id, user.id);
+  await assertBoardOwned(supabase, task.board_id, ownerUserId);
 
   const { error } = await supabase.from("tasks").delete().eq("id", taskId);
   if (error) throw new TasksError(error.message);
@@ -337,7 +337,7 @@ export async function moveTask(input: {
   orderedTaskIdsInColumn: string[];
 }): Promise<void> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const { data: task } = await supabase
     .from("tasks")
@@ -345,7 +345,7 @@ export async function moveTask(input: {
     .eq("id", input.taskId)
     .maybeSingle();
   if (!task) throw new TasksError("Tarefa não encontrada", 404);
-  await assertBoardOwned(supabase, task.board_id, user.id);
+  await assertBoardOwned(supabase, task.board_id, ownerUserId);
 
   const now = new Date().toISOString();
   await Promise.all(

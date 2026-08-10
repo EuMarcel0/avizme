@@ -23,6 +23,7 @@ type AppHeaderProps = {
   userEmail?: string | null;
   userPhone?: string | null;
   billing?: ClientBillingInfo;
+  guestOnly?: boolean;
   mobileNavOpen: boolean;
   onMobileNavOpenChange: (open: boolean) => void;
 };
@@ -32,6 +33,7 @@ export function AppHeader({
   userEmail,
   userPhone,
   billing,
+  guestOnly = false,
   mobileNavOpen,
   onMobileNavOpenChange,
 }: AppHeaderProps) {
@@ -67,6 +69,7 @@ export function AppHeader({
             </SheetHeader>
             <AppSidebarNav
               className="py-2"
+              guestOnly={guestOnly}
               onNavigate={() => onMobileNavOpenChange(false)}
             />
           </SheetContent>
@@ -74,13 +77,15 @@ export function AppHeader({
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
-        <NewReminderButton
-          inHeader
-          userEmail={userEmail}
-          userPhone={userPhone}
-          billing={billing}
-        />
-        <UserMenu user={user} />
+        {!guestOnly ? (
+          <NewReminderButton
+            inHeader
+            userEmail={userEmail}
+            userPhone={userPhone}
+            billing={billing}
+          />
+        ) : null}
+        <UserMenu user={user} guestOnly={guestOnly} />
       </div>
     </header>
   );

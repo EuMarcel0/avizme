@@ -22,8 +22,10 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   GripVertical,
   MoreHorizontal,
+  MoreVertical,
   Plus,
   SquareKanban,
+  Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -31,6 +33,7 @@ import { toast } from "sonner";
 import {
   createColumnAction,
   deleteColumnAction,
+  deleteTaskAction,
   getBoardAction,
   moveTaskAction,
   reorderColumnsAction,
@@ -39,6 +42,7 @@ import {
 import { ColumnForm } from "@/components/tasks/column-form";
 import { TaskModalForm } from "@/components/tasks/task-modal-form";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,6 +67,8 @@ export function KanbanBoard() {
   const [loading, setLoading] = useState(true);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [columnToDelete, setColumnToDelete] = useState<TaskColumn | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -111,9 +117,10 @@ export function KanbanBoard() {
     openModal({
       title: opts?.task ? "Editar tarefa" : "Nova tarefa",
       description: opts?.task
-        ? "Atualize status, tags e progresso."
+        ? "Detalhes, anotações e propriedades."
         : "Preencha os detalhes da tarefa.",
-      className: "w-[min(96vw,36rem)] max-w-[min(96vw,36rem)]",
+      className:
+        "h-[min(92vh,52rem)] w-[min(96vw,56rem)] max-w-[min(96vw,56rem)]",
       content: (
         <TaskModalForm
           boardId={board.id}
@@ -380,27 +387,8 @@ export function KanbanBoard() {
                 }
                 onOpenTask={(task) => openTaskModal({ task })}
                 onRename={() => handleRenameColumn(column)}
-                onDelete={() => {
-                  if (
-                    !window.confirm(
-                      "Excluir coluna e todas as tarefas nela?",
-                    )
-                  )
-                    return;
-                  startTransition(async () => {
-                    const result = await deleteColumnAction(column.id);
-                    if (!result.ok) {
-                      toast.error(result.error);
-                      return;
-                    }
-                    setColumns((prev) =>
-                      prev.filter((c) => c.id !== column.id),
-                    );
-                    setTasks((prev) =>
-                      prev.filter((t) => t.column_id !== column.id),
-                    );
-                  });
-                }}
+                onDelete={() => setColumnToDelete(column)}
+                onDeleteTask={(task) => setTaskToDelete(task)}
               />
             ))}
             {columns.length === 0 ? (
@@ -415,6 +403,55 @@ export function KanbanBoard() {
           {activeTask ? <TaskCardPreview task={activeTask} /> : null}
         </DragOverlay>
       </DndContext>
+
+      <ConfirmDialog
+        open={Boolean(columnToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setColumnToDelete(null);
+        }}
+        title="Excluir coluna?"
+        description="A coluna e todas as tarefas nela serão removidas. Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="destructive"
+        onConfirm={async () => {
+          if (!columnToDelete) return;
+          const result = await deleteColumnAction(columnToDelete.id);
+          if (!result.ok) {
+            toast.error(result.error);
+            return;
+          }
+          setColumns((prev) =>
+            prev.filter((c) => c.id !== columnToDelete.id),
+          );
+          setTasks((prev) =>
+            prev.filter((t) => t.column_id !== columnToDelete.id),
+          );
+          setColumnToDelete(null);
+          toast.success("Coluna excluída");
+        }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(taskToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setTaskToDelete(null);
+        }}
+        title="Excluir tarefa?"
+        description={`"${taskToDelete?.title ?? ""}" será removida permanentemente.`}
+        confirmLabel="Excluir"
+        variant="destructive"
+        onConfirm={async () => {
+          if (!taskToDelete) return;
+          const result = await deleteTaskAction(taskToDelete.id);
+          if (!result.ok) {
+            toast.error(result.error);
+            return;
+          }
+          setTasks((prev) => prev.filter((t) => t.id !== taskToDelete.id));
+          setTaskToDelete(null);
+          toast.success("Tarefa excluída");
+        }}
+      />
     </div>
   );
 }
@@ -426,6 +463,7 @@ function KanbanColumn({
   onOpenTask,
   onRename,
   onDelete,
+  onDeleteTask,
 }: {
   column: TaskColumn;
   tasks: Task[];
@@ -433,6 +471,7 @@ function KanbanColumn({
   onOpenTask: (task: Task) => void;
   onRename: () => void;
   onDelete: () => void;
+  onDeleteTask: (task: Task) => void;
 }) {
   const {
     attributes,
@@ -501,6 +540,7 @@ function KanbanColumn({
               key={task.id}
               task={task}
               onOpen={() => onOpenTask(task)}
+              onDelete={() => onDeleteTask(task)}
             />
           ))}
         </div>
@@ -525,9 +565,11 @@ function KanbanColumn({
 function SortableTaskCard({
   task,
   onOpen,
+  onDelete,
 }: {
   task: Task;
   onOpen: () => void;
+  onDelete: () => void;
 }) {
   const {
     attributes,
@@ -545,17 +587,42 @@ function SortableTaskCard({
         transform: CSS.Transform.toString(transform),
         transition,
       }}
-      className={cn(isDragging && "opacity-40")}
+      className={cn("group relative", isDragging && "opacity-40")}
     >
       <button
         type="button"
         onClick={onOpen}
-        className="w-full rounded-md border border-border/70 bg-white p-2.5 text-left shadow-sm transition-shadow hover:shadow-md dark:bg-card"
+        className="w-full rounded-md border border-border/70 bg-white p-2.5 pr-8 text-left shadow-sm transition-shadow hover:shadow-md dark:bg-card"
         {...attributes}
         {...listeners}
       >
         <TaskCardBody task={task} />
       </button>
+
+      <div className="absolute top-1.5 right-1.5">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted/70 group-hover:opacity-100"
+            aria-label="Opções da tarefa"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <MoreVertical className="size-3.5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <Trash2 className="size-3.5" />
+              Excluir
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

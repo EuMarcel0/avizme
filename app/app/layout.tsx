@@ -1,11 +1,16 @@
 import { redirect } from "next/navigation";
 
+import { GuestRouteGuard } from "@/components/layout/guest-route-guard";
 import { AppShell } from "@/components/layout/app-shell";
 import { toClientBillingInfo } from "@/lib/billing/client-billing";
 import { getUserBillingContext } from "@/lib/billing/get-user-billing";
 import { isStripeCheckoutConfigured } from "@/lib/billing/stripe-config";
 import { createClient } from "@/lib/supabase/server";
 import type { AppUser } from "@/lib/users/display-user";
+import {
+  acceptPendingInvitesForCurrentUser,
+  resolveWorkspaceAccess,
+} from "@/lib/workspace/workspace";
 
 export default async function AppLayout({
   children,
@@ -21,14 +26,24 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const [{ data: profile }, billingContext] = await Promise.all([
-    supabase
-      .from("users")
-      .select("email, phone")
-      .eq("id", user.id)
-      .maybeSingle(),
-    getUserBillingContext(supabase, user.id),
-  ]);
+  try {
+    await acceptPendingInvitesForCurrentUser();
+  } catch {
+    // ignore — convites são best-effort no boot
+  }
+
+  const [{ data: profile }, billingContext, workspaceAccess] =
+    await Promise.all([
+      supabase
+        .from("users")
+        .select("email, phone")
+        .eq("id", user.id)
+        .maybeSingle(),
+      getUserBillingContext(supabase, user.id),
+      resolveWorkspaceAccess(),
+    ]);
+
+  const guestOnly = workspaceAccess.isGuest;
 
   const billing = toClientBillingInfo(
     billingContext,
@@ -43,7 +58,7 @@ export default async function AppLayout({
       null,
     avatarUrl: (user.user_metadata?.avatar_url as string | undefined) ?? null,
     planTier: billingContext.planTier,
-    planLabel: billing.planLabel,
+    planLabel: guestOnly ? "Convidado" : billing.planLabel,
   };
 
   return (
@@ -52,7 +67,9 @@ export default async function AppLayout({
       userEmail={profile?.email ?? user.email ?? null}
       userPhone={profile?.phone ?? null}
       billing={billing}
+      guestOnly={guestOnly}
     >
+      <GuestRouteGuard guestOnly={guestOnly} />
       {children}
     </AppShell>
   );

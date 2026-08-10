@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { AppSidebarNav } from "./app-sidebar-nav";
 
-export function AppSidebar() {
+export function AppSidebar({ guestOnly = false }: { guestOnly?: boolean }) {
   return (
     <aside className="hidden w-14 shrink-0 md:block">
       <div
@@ -15,7 +15,11 @@ export function AppSidebar() {
           "hover:w-44 hover:shadow-lg",
         )}
       >
-        <AppSidebarNav className="flex-1 py-2" collapsible />
+        <AppSidebarNav
+          className="flex-1 py-2"
+          collapsible
+          guestOnly={guestOnly}
+        />
       </div>
     </aside>
   );

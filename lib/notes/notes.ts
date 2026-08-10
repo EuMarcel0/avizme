@@ -1,7 +1,7 @@
 import "server-only";
 
-import { requireAuthenticatedUser } from "@/lib/reminders/require-auth";
 import { createClient } from "@/lib/supabase/server";
+import { resolveWorkspaceAccess } from "@/lib/workspace/workspace";
 
 export type NoteFolder = {
   id: string;
@@ -36,14 +36,14 @@ export async function listFoldersAndNotes(): Promise<{
   notes: Note[];
 }> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const [{ data: folders, error: foldersError }, { data: notes, error: notesError }] =
     await Promise.all([
       supabase
         .from("note_folders")
         .select("id, name, sort_order, created_at, updated_at")
-        .eq("user_id", user.id)
+        .eq("user_id", ownerUserId)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true }),
       supabase
@@ -51,7 +51,7 @@ export async function listFoldersAndNotes(): Promise<{
         .select(
           "id, folder_id, title, content, sort_order, created_at, updated_at",
         )
-        .eq("user_id", user.id)
+        .eq("user_id", ownerUserId)
         .order("updated_at", { ascending: false }),
     ]);
 
@@ -66,19 +66,19 @@ export async function listFoldersAndNotes(): Promise<{
 
 export async function createFolder(name: string): Promise<NoteFolder> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
   const trimmed = name.trim();
   if (!trimmed) throw new NotesError("Nome da pasta é obrigatório", 400);
 
   const { count } = await supabase
     .from("note_folders")
     .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id);
+    .eq("user_id", ownerUserId);
 
   const { data, error } = await supabase
     .from("note_folders")
     .insert({
-      user_id: user.id,
+      user_id: ownerUserId,
       name: trimmed,
       sort_order: count ?? 0,
     })
@@ -94,7 +94,7 @@ export async function renameFolder(
   name: string,
 ): Promise<void> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
   const trimmed = name.trim();
   if (!trimmed) throw new NotesError("Nome da pasta é obrigatório", 400);
 
@@ -102,20 +102,20 @@ export async function renameFolder(
     .from("note_folders")
     .update({ name: trimmed, updated_at: new Date().toISOString() })
     .eq("id", folderId)
-    .eq("user_id", user.id);
+    .eq("user_id", ownerUserId);
 
   if (error) throw new NotesError(error.message);
 }
 
 export async function deleteFolder(folderId: string): Promise<void> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const { error } = await supabase
     .from("note_folders")
     .delete()
     .eq("id", folderId)
-    .eq("user_id", user.id);
+    .eq("user_id", ownerUserId);
 
   if (error) throw new NotesError(error.message);
 }
@@ -125,12 +125,12 @@ export async function createNote(input: {
   title?: string;
 }): Promise<Note> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const { data, error } = await supabase
     .from("notes")
     .insert({
-      user_id: user.id,
+      user_id: ownerUserId,
       folder_id: input.folderId ?? null,
       title: input.title?.trim() || "Sem título",
       content: "",
@@ -151,7 +151,7 @@ export async function updateNote(input: {
   folderId?: string | null;
 }): Promise<Note> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const patch: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
@@ -164,7 +164,7 @@ export async function updateNote(input: {
     .from("notes")
     .update(patch)
     .eq("id", input.id)
-    .eq("user_id", user.id)
+    .eq("user_id", ownerUserId)
     .select(
       "id, folder_id, title, content, sort_order, created_at, updated_at",
     )
@@ -177,13 +177,13 @@ export async function updateNote(input: {
 
 export async function deleteNote(noteId: string): Promise<void> {
   const supabase = await createClient();
-  const user = await requireAuthenticatedUser(supabase);
+  const { ownerUserId } = await resolveWorkspaceAccess();
 
   const { error } = await supabase
     .from("notes")
     .delete()
     .eq("id", noteId)
-    .eq("user_id", user.id);
+    .eq("user_id", ownerUserId);
 
   if (error) throw new NotesError(error.message);
 }

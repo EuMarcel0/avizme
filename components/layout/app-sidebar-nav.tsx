@@ -40,12 +40,18 @@ export function AppSidebarNav({
   onNavigate,
   className,
   collapsible = false,
+  guestOnly = false,
 }: {
   onNavigate?: () => void;
   className?: string;
   collapsible?: boolean;
+  /** Convidados só veem Anotações e tarefas. */
+  guestOnly?: boolean;
 }) {
   const pathname = usePathname();
+  const items = guestOnly
+    ? navItems.filter((item) => item.href === "/app/anotacoes")
+    : navItems;
 
   return (
     <nav
@@ -56,7 +62,7 @@ export function AppSidebarNav({
         className,
       )}
     >
-      {navItems.map(({ href, label, icon: Icon, exact }) => {
+      {items.map(({ href, label, icon: Icon, exact }) => {
         const isActive = exact
           ? pathname === href
           : pathname === href || pathname.startsWith(`${href}/`);

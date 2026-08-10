@@ -31,6 +31,7 @@ import {
 } from "@/app/actions/notes";
 import { FolderNameForm } from "@/components/notes/folder-name-form";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,6 +59,8 @@ export function NotesWorkspace() {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<NoteFolder | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirtyRef = useRef(false);
 
@@ -204,16 +207,7 @@ export function NotesWorkspace() {
   };
 
   const handleDeleteNote = (noteId: string) => {
-    if (!window.confirm("Excluir esta anotação?")) return;
-    startTransition(async () => {
-      const result = await deleteNoteAction(noteId);
-      if (!result.ok) {
-        toast.error(result.error);
-        return;
-      }
-      setNotes((prev) => prev.filter((n) => n.id !== noteId));
-      if (selectedNoteId === noteId) setSelectedNoteId(null);
-    });
+    setNoteToDelete(noteId);
   };
 
   if (loading) {
@@ -280,30 +274,7 @@ export function NotesWorkspace() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     variant="destructive"
-                    onClick={() => {
-                      if (!window.confirm("Excluir pasta? As notas ficam sem pasta."))
-                        return;
-                      startTransition(async () => {
-                        const result = await deleteFolderAction(folder.id);
-                        if (!result.ok) {
-                          toast.error(result.error);
-                          return;
-                        }
-                        setFolders((prev) =>
-                          prev.filter((f) => f.id !== folder.id),
-                        );
-                        setNotes((prev) =>
-                          prev.map((n) =>
-                            n.folder_id === folder.id
-                              ? { ...n, folder_id: null }
-                              : n,
-                          ),
-                        );
-                        if (selectedFolder === folder.id) {
-                          setSelectedFolder("all");
-                        }
-                      });
-                    }}
+                    onClick={() => setFolderToDelete(folder)}
                   >
                     Excluir
                   </DropdownMenuItem>
@@ -422,6 +393,63 @@ export function NotesWorkspace() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(noteToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setNoteToDelete(null);
+        }}
+        title="Excluir anotação?"
+        description="Esta anotação será removida permanentemente."
+        confirmLabel="Excluir"
+        variant="destructive"
+        onConfirm={async () => {
+          if (!noteToDelete) return;
+          const result = await deleteNoteAction(noteToDelete);
+          if (!result.ok) {
+            toast.error(result.error);
+            return;
+          }
+          setNotes((prev) => prev.filter((n) => n.id !== noteToDelete));
+          if (selectedNoteId === noteToDelete) setSelectedNoteId(null);
+          setNoteToDelete(null);
+          toast.success("Anotação excluída");
+        }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(folderToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setFolderToDelete(null);
+        }}
+        title="Excluir pasta?"
+        description="As anotações da pasta ficam sem pasta. A pasta será removida."
+        confirmLabel="Excluir"
+        variant="destructive"
+        onConfirm={async () => {
+          if (!folderToDelete) return;
+          const result = await deleteFolderAction(folderToDelete.id);
+          if (!result.ok) {
+            toast.error(result.error);
+            return;
+          }
+          setFolders((prev) =>
+            prev.filter((f) => f.id !== folderToDelete.id),
+          );
+          setNotes((prev) =>
+            prev.map((n) =>
+              n.folder_id === folderToDelete.id
+                ? { ...n, folder_id: null }
+                : n,
+            ),
+          );
+          if (selectedFolder === folderToDelete.id) {
+            setSelectedFolder("all");
+          }
+          setFolderToDelete(null);
+          toast.success("Pasta excluída");
+        }}
+      />
     </div>
   );
 }
