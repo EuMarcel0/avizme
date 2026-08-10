@@ -78,6 +78,47 @@ export async function inviteToWorkspaceAction(
   }
 }
 
+export async function inviteManyToWorkspaceAction(
+  emails: string[],
+): Promise<
+  WorkspaceActionResult<{
+    invited: number;
+    errors: string[];
+  }>
+> {
+  const unique = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
+  if (unique.length === 0) {
+    return { ok: false, error: "Informe ao menos um e-mail." };
+  }
+
+  let invited = 0;
+  const errors: string[] = [];
+
+  for (const email of unique) {
+    try {
+      await inviteToWorkspace(email);
+      invited += 1;
+    } catch (error) {
+      const message =
+        error instanceof WorkspaceError
+          ? error.message
+          : `Falha ao convidar ${email}`;
+      errors.push(`${email}: ${message}`);
+    }
+  }
+
+  if (invited > 0) revalidatePath(PATH);
+
+  if (invited === 0) {
+    return {
+      ok: false,
+      error: errors[0] ?? "Nenhum convite foi enviado.",
+    };
+  }
+
+  return { ok: true, data: { invited, errors } };
+}
+
 export async function revokeInviteAction(
   inviteId: string,
 ): Promise<WorkspaceActionResult> {

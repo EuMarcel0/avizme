@@ -5,15 +5,16 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
-  inviteToWorkspaceAction,
+  inviteManyToWorkspaceAction,
   listWorkspacePeopleAction,
   removeMemberAction,
   revokeInviteAction,
 } from "@/app/actions/workspace";
+import { MultiEmailInput } from "@/components/workspace/multi-email-input";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useModal } from "@/hooks/use-modal";
 import type {
   WorkspaceInvite,
   WorkspaceMember,
@@ -28,11 +29,9 @@ export function WorkspaceInvitePanel({
   canInvite,
   isGuest,
 }: WorkspaceInvitePanelProps) {
-  const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState("");
+  const { openModal, closeModal } = useModal();
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [invites, setInvites] = useState<WorkspaceInvite[]>([]);
-  const [pending, startTransition] = useTransition();
   const [revokeId, setRevokeId] = useState<string | null>(null);
   const [removeId, setRemoveId] = useState<string | null>(null);
 
@@ -40,15 +39,18 @@ export function WorkspaceInvitePanel({
     const result = await listWorkspacePeopleAction();
     if (!result.ok) {
       toast.error(result.error);
-      return;
+      return { members: [] as WorkspaceMember[], invites: [] as WorkspaceInvite[] };
     }
-    setMembers(result.data.members);
-    setInvites(result.data.invites.filter((i) => i.status === "pending"));
+    const nextMembers = result.data.members;
+    const nextInvites = result.data.invites.filter((i) => i.status === "pending");
+    setMembers(nextMembers);
+    setInvites(nextInvites);
+    return { members: nextMembers, invites: nextInvites };
   }, []);
 
   useEffect(() => {
-    if (open && !isGuest) void load();
-  }, [open, isGuest, load]);
+    if (!isGuest) void load();
+  }, [isGuest, load]);
 
   if (isGuest) {
     return (
@@ -58,132 +60,46 @@ export function WorkspaceInvitePanel({
     );
   }
 
+  const openInviteModal = async () => {
+    const data = await load();
+    openModal({
+      title: "Convidar pessoas",
+      description:
+        "Convidados acessam só Anotações e tarefas, com permissão de criar, editar e ler.",
+      className: "w-[min(96vw,32rem)] max-w-[min(96vw,32rem)]",
+      content: (
+        <InviteModalContent
+          canInvite={canInvite}
+          initialMembers={data.members}
+          initialInvites={data.invites}
+          onDone={async () => {
+            await load();
+          }}
+          onClose={closeModal}
+          onRequestRemove={(id) => {
+            closeModal();
+            setTimeout(() => setRemoveId(id), 220);
+          }}
+          onRequestRevoke={(id) => {
+            closeModal();
+            setTimeout(() => setRevokeId(id), 220);
+          }}
+        />
+      ),
+    });
+  };
+
   return (
     <div className="space-y-2">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen((v) => !v)}
-      >
+      <Button type="button" variant="outline" size="sm" onClick={openInviteModal}>
         <Users className="size-3.5" />
-        {open ? "Fechar pessoas" : "Convidar pessoas"}
+        Convidar pessoas
+        {members.length + invites.length > 0 ? (
+          <span className="ml-1 rounded-full bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground">
+            {members.length + invites.length}
+          </span>
+        ) : null}
       </Button>
-
-      {open ? (
-        <div className="rounded-lg border border-border/80 bg-white p-4 shadow-sm dark:bg-card/90">
-          <div className="mb-3 flex items-start gap-2">
-            <UserPlus className="mt-0.5 size-4 text-primary" />
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                Compartilhar anotações e tarefas
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Convidados acessam só este menu, com permissão de criar, editar e
-                ler. Exige plano Pro ou superior.
-              </p>
-            </div>
-          </div>
-
-          {!canInvite ? (
-            <p className="rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
-              Ative uma assinatura Pro ou Premium para convidar pessoas.
-            </p>
-          ) : (
-            <form
-              className="flex flex-col gap-2 sm:flex-row"
-              onSubmit={(e) => {
-                e.preventDefault();
-                startTransition(async () => {
-                  const result = await inviteToWorkspaceAction(email);
-                  if (!result.ok) {
-                    toast.error(result.error);
-                    return;
-                  }
-                  toast.success("Convite enviado");
-                  setEmail("");
-                  void load();
-                });
-              }}
-            >
-              <div className="flex-1 space-y-1">
-                <Label htmlFor="invite-email" className="sr-only">
-                  E-mail
-                </Label>
-                <Input
-                  id="invite-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@exemplo.com"
-                  required
-                />
-              </div>
-              <Button type="submit" size="sm" disabled={pending || !email.trim()}>
-                {pending ? "Enviando…" : "Convidar"}
-              </Button>
-            </form>
-          )}
-
-          <div className="mt-4 space-y-3">
-            {members.length > 0 ? (
-              <div>
-                <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Membros
-                </p>
-                <ul className="space-y-1">
-                  {members.map((m) => (
-                    <li
-                      key={m.id}
-                      className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40"
-                    >
-                      <span className="truncate">
-                        {m.full_name || m.email || m.member_user_id}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Remover membro"
-                        onClick={() => setRemoveId(m.id)}
-                      >
-                        <X className="size-3.5" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {invites.length > 0 ? (
-              <div>
-                <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Convites pendentes
-                </p>
-                <ul className="space-y-1">
-                  {invites.map((inv) => (
-                    <li
-                      key={inv.id}
-                      className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40"
-                    >
-                      <span className="truncate">{inv.email}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label="Revogar convite"
-                        onClick={() => setRevokeId(inv.id)}
-                      >
-                        <X className="size-3.5" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
 
       <ConfirmDialog
         open={Boolean(revokeId)}
@@ -228,6 +144,164 @@ export function WorkspaceInvitePanel({
           toast.success("Membro removido");
         }}
       />
+    </div>
+  );
+}
+
+function InviteModalContent({
+  canInvite,
+  initialMembers,
+  initialInvites,
+  onDone,
+  onClose,
+  onRequestRemove,
+  onRequestRevoke,
+}: {
+  canInvite: boolean;
+  initialMembers: WorkspaceMember[];
+  initialInvites: WorkspaceInvite[];
+  onDone: () => Promise<void>;
+  onClose: () => void;
+  onRequestRemove: (id: string) => void;
+  onRequestRevoke: (id: string) => void;
+}) {
+  const [emails, setEmails] = useState<string[]>([]);
+  const [members, setMembers] = useState(initialMembers);
+  const [invites, setInvites] = useState(initialInvites);
+  const [pending, startTransition] = useTransition();
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        <div className="flex items-start gap-2 rounded-md bg-muted/30 px-3 py-2">
+          <UserPlus className="mt-0.5 size-4 shrink-0 text-primary" />
+          <p className="text-xs text-muted-foreground">
+            Exige plano Pro ou superior. Você pode convidar vários e-mails de
+            uma vez.
+          </p>
+        </div>
+
+        {!canInvite ? (
+          <p className="rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+            Ative uma assinatura Pro ou Premium para convidar pessoas.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="invite-emails">E-mails</Label>
+            <MultiEmailInput
+              id="invite-emails"
+              value={emails}
+              onChange={setEmails}
+              placeholder="nome@empresa.com"
+            />
+          </div>
+        )}
+
+        {members.length > 0 ? (
+          <div>
+            <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Membros
+            </p>
+            <ul className="space-y-1">
+              {members.map((m) => (
+                <li
+                  key={m.id}
+                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40"
+                >
+                  <span className="truncate">
+                    {m.full_name || m.email || m.member_user_id}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Remover membro"
+                    onClick={() => onRequestRemove(m.id)}
+                  >
+                    <X className="size-3.5" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {invites.length > 0 ? (
+          <div>
+            <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Convites pendentes
+            </p>
+            <ul className="space-y-1">
+              {invites.map((inv) => (
+                <li
+                  key={inv.id}
+                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40"
+                >
+                  <span className="truncate">{inv.email}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Revogar convite"
+                    onClick={() => onRequestRevoke(inv.id)}
+                  >
+                    <X className="size-3.5" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="flex justify-end gap-2 border-t border-border/60 px-5 py-3">
+        <Button type="button" variant="outline" size="sm" onClick={onClose}>
+          Fechar
+        </Button>
+        {canInvite ? (
+          <Button
+            type="button"
+            size="sm"
+            disabled={pending || emails.length === 0}
+            onClick={() => {
+              startTransition(async () => {
+                const result = await inviteManyToWorkspaceAction(emails);
+                if (!result.ok) {
+                  toast.error(result.error);
+                  return;
+                }
+                const { invited, errors } = result.data;
+                if (errors.length > 0) {
+                  toast.warning(
+                    `${invited} convite(s) enviado(s). Alguns falharam.`,
+                  );
+                } else {
+                  toast.success(
+                    invited === 1
+                      ? "Convite enviado"
+                      : `${invited} convites enviados`,
+                  );
+                }
+                setEmails([]);
+                await onDone();
+                const refreshed = await listWorkspacePeopleAction();
+                if (refreshed.ok) {
+                  setMembers(refreshed.data.members);
+                  setInvites(
+                    refreshed.data.invites.filter((i) => i.status === "pending"),
+                  );
+                }
+              });
+            }}
+          >
+            {pending
+              ? "Enviando…"
+              : emails.length <= 1
+                ? "Convidar"
+                : `Convidar ${emails.length}`}
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
